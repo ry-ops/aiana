@@ -1,3 +1,6 @@
+
+<img src="https://github.com/ry-ops/aiana/blob/main/aiana.png" width="100%">
+
 # Aiana
 
 **AI Conversation Attendant for Claude Code**
