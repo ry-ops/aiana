@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  aiana:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ry-ops/aiana:latest
+    container_name: aiana
+    restart: unless-stopped
+
+    volumes:
+      # Mount Claude Code directory (read-only for safety)
+      - ~/.claude:/home/aiana/.claude:ro
+
+      # Persist Aiana data (conversations database)
+      - aiana-data:/home/aiana/.aiana
+
+    # Optional: expose for future web UI
+    # ports:
+    #   - "8080:8080"
+
+    environment:
+      - TZ=${TZ:-America/Chicago}
+
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
+
+    # Health check
+    healthcheck:
+      test: ["CMD", "aiana", "status"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+    # Logging
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  aiana-data:
+    name: aiana-data

@@ -38,41 +38,79 @@ All data stays on your machine in `~/.aiana/`.
 ## Features
 
 ### Implemented
-- [ ] Hook-based session capture
-- [ ] JSONL file monitoring
-- [ ] Local SQLite storage
-- [ ] CLI interface
-- [ ] Full-text search
+- [x] Hook-based session capture
+- [x] JSONL file monitoring
+- [x] Local SQLite storage with FTS5 search
+- [x] CLI interface (list, show, search, export)
+- [x] Full-text search
+- [x] Docker support
 
 ### Planned
 - [ ] Secret redaction
 - [ ] Encryption at rest
-- [ ] Export (Markdown, JSON, HTML)
 - [ ] Session summaries
 - [ ] MCP server mode
 - [ ] Web UI (optional)
 
-## Installation
+## Quick Start
+
+### Docker (Recommended)
 
 ```bash
-# Install Aiana
-pip install aiana  # Coming soon
+# Clone repository
+git clone https://github.com/ry-ops/aiana
+cd aiana
 
-# Or from source
+# Start with Docker Compose
+docker compose up -d
+
+# View logs
+docker compose logs -f
+
+# Run commands
+docker compose exec aiana aiana list
+docker compose exec aiana aiana search "query"
+```
+
+### Docker Run
+
+```bash
+# Build image
+docker build -t ry-ops/aiana .
+
+# Run container
+docker run -d \
+  --name aiana \
+  -v ~/.claude:/home/aiana/.claude:ro \
+  -v aiana-data:/home/aiana/.aiana \
+  ry-ops/aiana
+
+# Execute commands
+docker exec aiana aiana list
+docker exec aiana aiana show <session-id>
+docker exec aiana aiana search "authentication"
+```
+
+### Local Installation
+
+Requires Python 3.10+
+
+```bash
+# Install from source
 git clone https://github.com/ry-ops/aiana
 cd aiana
 pip install -e .
 
 # Install Claude Code hooks
 aiana install
+
+# Start monitoring
+aiana start
 ```
 
 ## Usage
 
 ```bash
-# Start monitoring (daemon mode)
-aiana start --daemon
-
 # List recent sessions
 aiana list --limit 10
 
@@ -84,11 +122,73 @@ aiana show <session-id>
 
 # Export session
 aiana export <session-id> --format markdown > session.md
+
+# Show status
+aiana status
+```
+
+## Docker Configuration
+
+### docker-compose.yml
+
+```yaml
+version: '3.8'
+
+services:
+  aiana:
+    image: ry-ops/aiana:latest
+    container_name: aiana
+    restart: unless-stopped
+    volumes:
+      # Mount Claude Code directory (read-only)
+      - ~/.claude:/home/aiana/.claude:ro
+      # Persist Aiana data
+      - aiana-data:/home/aiana/.aiana
+    environment:
+      - TZ=America/Chicago
+
+volumes:
+  aiana-data:
+```
+
+### Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `TZ` | Timezone | `UTC` |
+
+### Volumes
+
+| Path | Description |
+|------|-------------|
+| `/home/aiana/.claude` | Claude Code data (mount read-only) |
+| `/home/aiana/.aiana` | Aiana database and config |
+
+### Commands
+
+```bash
+# Start monitoring (default)
+docker compose up -d
+
+# View sessions
+docker compose exec aiana aiana list
+
+# Search conversations
+docker compose exec aiana aiana search "query"
+
+# Export session
+docker compose exec aiana aiana export <id> --format markdown
+
+# Shell access
+docker compose exec aiana shell
+
+# View logs
+docker compose logs -f aiana
 ```
 
 ## Configuration
 
-Create `~/.aiana/config.yaml`:
+Configuration file: `~/.aiana/config.yaml` (or `/home/aiana/.aiana/config.yaml` in Docker)
 
 ```yaml
 storage:
@@ -97,10 +197,15 @@ storage:
 
 recording:
   include_tool_results: true
+  include_thinking: false
   redact_secrets: true
 
 retention:
   days: 90
+  max_sessions: 1000
+
+privacy:
+  encrypt_at_rest: false
 ```
 
 ## Architecture
@@ -110,7 +215,7 @@ See [Architecture Documentation](docs/ARCHITECTURE.md) for full technical detail
 ```
 ~/.aiana/
 ├── config.yaml          # Configuration
-├── conversations.db     # SQLite database
+├── conversations.db     # SQLite database with FTS5
 └── exports/             # Exported sessions
 ```
 
@@ -128,13 +233,13 @@ Aiana is designed with privacy as a core principle:
 - **Local Only**: All data stored on your machine
 - **No Cloud Sync**: Data never leaves your system
 - **User Control**: You decide what gets recorded
-- **Secret Redaction**: Automatic detection and redaction of sensitive data
-- **Encryption**: Optional encryption at rest
-- **Consent**: Explicit opt-in required
+- **Read-Only Access**: Docker mounts Claude directory as read-only
+- **Non-Root Container**: Runs as unprivileged user
+- **Encryption**: Optional encryption at rest (planned)
 
 ## Claude Code Integration
 
-Aiana integrates via Claude Code's official hooks system:
+For local installation, Aiana integrates via Claude Code's official hooks system:
 
 ```json
 {
@@ -152,6 +257,8 @@ Aiana integrates via Claude Code's official hooks system:
   }
 }
 ```
+
+In Docker mode, Aiana uses file watching instead of hooks for monitoring.
 
 ## Development
 
@@ -173,6 +280,9 @@ pytest
 # Run linting
 ruff check .
 mypy src/
+
+# Build Docker image
+docker build -t ry-ops/aiana .
 ```
 
 ## Roadmap
@@ -182,15 +292,16 @@ mypy src/
   - [x] Anthropic API documentation
   - [x] TOS compatibility analysis
   - [x] Architecture design
-- [ ] Phase 1: Core MVP
-  - [ ] Hook handler implementation
-  - [ ] File watcher
-  - [ ] SQLite storage
-  - [ ] Basic CLI
+- [x] Phase 1: Core MVP
+  - [x] Hook handler implementation
+  - [x] File watcher
+  - [x] SQLite storage with FTS5
+  - [x] CLI interface
+  - [x] Docker support
 - [ ] Phase 2: Enhanced Features
   - [ ] Secret redaction
-  - [ ] Encryption
-  - [ ] Export formats
+  - [ ] Encryption at rest
+  - [ ] Export formats (HTML)
   - [ ] Session summaries
 - [ ] Phase 3: Advanced
   - [ ] MCP server mode
@@ -217,6 +328,6 @@ MIT License - see [LICENSE](LICENSE) file for details.
 ---
 
 **Project**: Part of the [@ry-ops](https://github.com/ry-ops) ecosystem
-**Status**: Phase 0 Complete - Ready for Implementation
+**Status**: Phase 1 Complete - MVP Ready
 **Created**: 2025-10-31
-**Updated**: 2025-12-08
+**Updated**: 2025-12-09
