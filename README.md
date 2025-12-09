@@ -5,94 +5,218 @@
 
 **AI Conversation Attendant for Claude Code**
 
-Aiana is a conversation monitoring and recording system that integrates with Claude Code to capture and store conversations in real-time.
+Aiana is a conversation monitoring and recording system that integrates with Claude Code to capture and store conversations locally for review, analysis, and archival.
 
-## Overview
+## TOS Compatibility
 
-When you launch Claude Code, Aiana can optionally "listen in" to your conversation, recording the exchange for later review, analysis, or archival purposes.
+**Status: CONDITIONALLY COMPATIBLE** - See [TOS Compatibility Analysis](docs/TOS_COMPATIBILITY_ANALYSIS.md)
 
-## Features (Planned)
+Aiana operates within Anthropic's Terms of Service by:
+- Recording only YOUR OWN conversations (user owns their data)
+- Storing all data locally (no external transmission)
+- Using official Claude Code hooks API
+- Respecting user privacy and consent
 
-- **Real-time Monitoring**: Captures conversations as they happen via Claude Code API
-- **User Opt-in**: Prompts for permission when Claude Code launches
-- **Secure Storage**: Conversations stored locally with privacy in mind
-- **Conversation Replay**: Review past conversations
-- **Search & Filter**: Find specific topics or exchanges
-- **Privacy First**: User controls what gets recorded and stored
+## How It Works
 
-## Status
+Aiana uses Claude Code's official [Hooks System](https://code.claude.com/docs/en/hooks) to capture conversation events:
 
-🚧 **In Development** - This project is in active development as part of the commit-relay multi-agent system.
+```
+Claude Code Session
+       │
+       ├─► SessionStart hook → Aiana registers session
+       │
+       ├─► File watcher monitors ~/.claude/projects/*.jsonl
+       │
+       ├─► PostToolUse hooks → Capture tool interactions
+       │
+       └─► SessionEnd hook → Finalize and index session
+```
 
-### Current Phase
+All data stays on your machine in `~/.aiana/`.
 
-- [x] Repository created
-- [ ] API research (investigating Claude Code conversation access)
-- [ ] Architecture design
-- [ ] Implementation
-- [ ] Testing
-- [ ] Documentation
+## Features
 
-## Architecture
+### Implemented
+- [ ] Hook-based session capture
+- [ ] JSONL file monitoring
+- [ ] Local SQLite storage
+- [ ] CLI interface
+- [ ] Full-text search
 
-Aiana is designed to integrate with Claude Code through its API, enabling:
-
-1. **Conversation Access**: Retrieval of conversation data in real-time
-2. **Storage Layer**: Local conversation database
-3. **User Interface**: Simple opt-in mechanism and conversation viewer
-4. **Privacy Controls**: User-configurable retention and filtering
-
-## Technical Stack
-
-- **Language**: Python 3.10+
-- **Integration**: Claude Code API
-- **Storage**: TBD (based on requirements)
-- **Framework**: TBD (potentially MCP server or CLI wrapper)
+### Planned
+- [ ] Secret redaction
+- [ ] Encryption at rest
+- [ ] Export (Markdown, JSON, HTML)
+- [ ] Session summaries
+- [ ] MCP server mode
+- [ ] Web UI (optional)
 
 ## Installation
 
-*Coming soon*
+```bash
+# Install Aiana
+pip install aiana  # Coming soon
+
+# Or from source
+git clone https://github.com/ry-ops/aiana
+cd aiana
+pip install -e .
+
+# Install Claude Code hooks
+aiana install
+```
 
 ## Usage
 
-*Coming soon*
+```bash
+# Start monitoring (daemon mode)
+aiana start --daemon
 
-## Development
+# List recent sessions
+aiana list --limit 10
 
-This project is managed by the commit-relay multi-agent system at [@ry-ops/commit-relay](https://github.com/ry-ops/commit-relay).
+# Search conversations
+aiana search "database migration"
 
-### Development Agents
+# View a session
+aiana show <session-id>
 
-- **Development Agent**: Feature implementation and bug fixes
-- **Security Agent**: Security audits and vulnerability management
-- **Coordinator Agent**: Task orchestration and planning
+# Export session
+aiana export <session-id> --format markdown > session.md
+```
+
+## Configuration
+
+Create `~/.aiana/config.yaml`:
+
+```yaml
+storage:
+  type: sqlite
+  path: ~/.aiana/conversations.db
+
+recording:
+  include_tool_results: true
+  redact_secrets: true
+
+retention:
+  days: 90
+```
+
+## Architecture
+
+See [Architecture Documentation](docs/ARCHITECTURE.md) for full technical details.
+
+```
+~/.aiana/
+├── config.yaml          # Configuration
+├── conversations.db     # SQLite database
+└── exports/             # Exported sessions
+```
+
+## Documentation
+
+- [Architecture](docs/ARCHITECTURE.md) - Technical design and components
+- [Claude Code Internals](docs/CLAUDE_CODE_INTERNALS.md) - File formats, hooks, APIs
+- [Anthropic API Reference](docs/ANTHROPIC_API_REFERENCE.md) - API documentation
+- [TOS Compatibility Analysis](docs/TOS_COMPATIBILITY_ANALYSIS.md) - Legal compliance
 
 ## Privacy & Security
 
 Aiana is designed with privacy as a core principle:
 
-- **Local Storage**: Conversations stored on your machine
-- **No Cloud Sync**: Data stays local unless you explicitly export it
-- **User Control**: Complete control over what gets recorded
-- **Encryption**: *Planned* - Conversation encryption at rest
+- **Local Only**: All data stored on your machine
+- **No Cloud Sync**: Data never leaves your system
+- **User Control**: You decide what gets recorded
+- **Secret Redaction**: Automatic detection and redaction of sensitive data
+- **Encryption**: Optional encryption at rest
+- **Consent**: Explicit opt-in required
+
+## Claude Code Integration
+
+Aiana integrates via Claude Code's official hooks system:
+
+```json
+{
+  "hooks": {
+    "SessionStart": [{
+      "hooks": [{"type": "command", "command": "aiana hook session-start"}]
+    }],
+    "PostToolUse": [{
+      "matcher": "*",
+      "hooks": [{"type": "command", "command": "aiana hook post-tool"}]
+    }],
+    "SessionEnd": [{
+      "hooks": [{"type": "command", "command": "aiana hook session-end"}]
+    }]
+  }
+}
+```
+
+## Development
+
+```bash
+# Clone repository
+git clone https://github.com/ry-ops/aiana
+cd aiana
+
+# Create virtual environment
+python -m venv .venv
+source .venv/bin/activate
+
+# Install dev dependencies
+pip install -e ".[dev]"
+
+# Run tests
+pytest
+
+# Run linting
+ruff check .
+mypy src/
+```
+
+## Roadmap
+
+- [x] Phase 0: Research & Documentation
+  - [x] Claude Code internals research
+  - [x] Anthropic API documentation
+  - [x] TOS compatibility analysis
+  - [x] Architecture design
+- [ ] Phase 1: Core MVP
+  - [ ] Hook handler implementation
+  - [ ] File watcher
+  - [ ] SQLite storage
+  - [ ] Basic CLI
+- [ ] Phase 2: Enhanced Features
+  - [ ] Secret redaction
+  - [ ] Encryption
+  - [ ] Export formats
+  - [ ] Session summaries
+- [ ] Phase 3: Advanced
+  - [ ] MCP server mode
+  - [ ] Web UI
+  - [ ] Team support
+
+## Related Projects
+
+Community tools for Claude Code conversation management:
+
+- [ccusage](https://github.com/ryoppippi/ccusage) - Cost/token tracking
+- [claude-code-log](https://github.com/daaain/claude-code-log) - JSONL to HTML converter
+- [claude-history](https://github.com/thejud/claude-history) - History extraction
+- [claude-JSONL-browser](https://github.com/withLinda/claude-JSONL-browser) - Web-based viewer
 
 ## Contributing
 
-This is a personal project under active development. Contributions and suggestions welcome via issues.
+Contributions welcome! Please read the documentation and open an issue before submitting PRs.
 
 ## License
 
 MIT License - see [LICENSE](LICENSE) file for details.
 
-## Roadmap
-
-- [ ] Phase 1: API Research & Architecture
-- [ ] Phase 2: Core Implementation
-- [ ] Phase 3: User Interface
-- [ ] Phase 4: Advanced Features (search, export, analytics)
-
 ---
 
 **Project**: Part of the [@ry-ops](https://github.com/ry-ops) ecosystem
-**Status**: 🚧 Active Development
+**Status**: Phase 0 Complete - Ready for Implementation
 **Created**: 2025-10-31
+**Updated**: 2025-12-08
