@@ -3,106 +3,106 @@
 
 # Aiana
 
-**AI Conversation Attendant for Claude Code**
+**Personal AI Operations Memory for Claude Code**
 
-Aiana is a conversation monitoring and recording system that integrates with Claude Code to capture and store conversations locally for review, analysis, and archival.
+Aiana transforms Claude Code from stateless sessions into a compound learning system. It captures conversations, embeds them as vectors, and injects relevant context at session start—so your AI assistant remembers YOUR patterns.
 
-## TOS Compatibility
-
-**Status: CONDITIONALLY COMPATIBLE** - See [TOS Compatibility Analysis](docs/TOS_COMPATIBILITY_ANALYSIS.md)
-
-Aiana operates within Anthropic's Terms of Service by:
-- Recording only YOUR OWN conversations (user owns their data)
-- Storing all data locally (no external transmission)
-- Using official Claude Code hooks API
-- Respecting user privacy and consent
-
-## How It Works
-
-Aiana uses Claude Code's official [Hooks System](https://code.claude.com/docs/en/hooks) to capture conversation events:
+## The Vision
 
 ```
-Claude Code Session
-       │
-       ├─► SessionStart hook → Aiana registers session
-       │
-       ├─► File watcher monitors ~/.claude/projects/*.jsonl
-       │
-       ├─► PostToolUse hooks → Capture tool interactions
-       │
-       └─► SessionEnd hook → Finalize and index session
+Traditional: Sessions → Do tasks → Forget
+With Aiana:  Sessions → Do tasks → Remember → Improve → Compound
 ```
 
-All data stays on your machine in `~/.aiana/`.
+Every session makes future sessions better. Your workflows get encoded. Your preferences persist. Claude learns YOUR way of working.
+
+---
+
+## Architecture
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│                            AIANA                                  │
+│                                                                   │
+│  ┌─────────────┐    ┌─────────────┐    ┌─────────────────────┐   │
+│  │   SQLite    │    │    Redis    │    │      Qdrant         │   │
+│  │   (FTS5)    │    │   (Cache)   │    │  (Vector Search)    │   │
+│  │             │    │             │    │                     │   │
+│  │ - Sessions  │    │ - Hot data  │    │ - Embeddings        │   │
+│  │ - Messages  │    │ - Context   │    │ - Semantic search   │   │
+│  │ - Full-text │    │ - Prefs     │    │ - Similar memories  │   │
+│  └─────────────┘    └─────────────┘    └─────────────────────┘   │
+│                              │                                    │
+│                              ▼                                    │
+│                    ┌─────────────────┐                           │
+│                    │ Context Injector│                           │
+│                    │                 │                           │
+│                    │ SessionStart →  │                           │
+│                    │ Inject memories │                           │
+│                    └─────────────────┘                           │
+│                              │                                    │
+│                              ▼                                    │
+│                    ┌─────────────────┐                           │
+│                    │   MCP Server    │                           │
+│                    │                 │                           │
+│                    │ Expose tools to │                           │
+│                    │ Claude Code     │                           │
+│                    └─────────────────┘                           │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+---
 
 ## Features
 
-### Implemented
-- [x] Hook-based session capture
-- [x] JSONL file monitoring
-- [x] Local SQLite storage with FTS5 search
-- [x] CLI interface (list, show, search, export)
-- [x] Full-text search
-- [x] Docker support
-- [x] **Redis caching** - Fast session state and context caching
-- [x] **Qdrant vector storage** - Semantic search across memories
-- [x] **MCP server mode** - Expose memory tools to Claude
-- [x] **Context injection** - Auto-inject relevant memories at session start
-- [x] **User preferences** - Persistent and dynamic preference tracking
+### Storage & Search
+- **SQLite with FTS5** - Session transcripts, full-text search
+- **Redis caching** - Fast session state, context cache, preferences
+- **Qdrant vectors** - Semantic search via sentence-transformers
 
-### Planned
-- [ ] Secret redaction
-- [ ] Encryption at rest
-- [ ] Session summaries
-- [ ] Web UI (optional)
+### Intelligence
+- **Context injection** - Auto-inject relevant memories at session start
+- **User preferences** - Persistent (static) and recent (dynamic) prefs
+- **Semantic search** - Find memories by meaning, not just keywords
+
+### Integration
+- **MCP server mode** - Expose memory tools directly to Claude
+- **Hook-based capture** - Official Claude Code hooks API
+- **File watcher** - Docker-compatible monitoring mode
+
+### Privacy
+- **100% local** - All data stays on your machine
+- **No cloud sync** - Nothing leaves your system
+- **Read-only mounts** - Docker uses read-only access to Claude data
+
+---
 
 ## Quick Start
 
-### Docker (Recommended)
+### Docker Compose (Recommended)
 
 ```bash
 # Clone repository
 git clone https://github.com/ry-ops/aiana
 cd aiana
 
-# Start with Docker Compose
+# Start full stack (Aiana + Redis + Qdrant)
 docker compose up -d
 
-# View logs
-docker compose logs -f
+# Check status
+docker compose exec aiana aiana status
 
-# Run commands
-docker compose exec aiana aiana list
-docker compose exec aiana aiana search "query"
-```
-
-### Docker Run
-
-```bash
-# Build image
-docker build -t ry-ops/aiana .
-
-# Run container
-docker run -d \
-  --name aiana \
-  -v ~/.claude:/home/aiana/.claude:ro \
-  -v aiana-data:/home/aiana/.aiana \
-  ry-ops/aiana
-
-# Execute commands
-docker exec aiana aiana list
-docker exec aiana aiana show <session-id>
-docker exec aiana aiana search "authentication"
+# Search memories
+docker compose exec aiana aiana memory search "authentication"
 ```
 
 ### Local Installation
 
-Requires Python 3.10+
-
 ```bash
-# Install from source
-git clone https://github.com/ry-ops/aiana
-cd aiana
+# Install with all features
+pip install -e ".[all]"
+
+# Or minimal install
 pip install -e .
 
 # Install Claude Code hooks
@@ -112,28 +112,93 @@ aiana install
 aiana start
 ```
 
-## Usage
+---
+
+## CLI Commands
+
+### Session Management
 
 ```bash
 # List recent sessions
 aiana list --limit 10
 
-# Search conversations
-aiana search "database migration"
-
 # View a session
 aiana show <session-id>
 
-# Export session
-aiana export <session-id> --format markdown > session.md
+# Search full-text
+aiana search "database migration"
 
-# Show status
+# Export session
+aiana export <session-id> --format markdown
+```
+
+### Memory Operations
+
+```bash
+# Semantic search
+aiana memory search "how did I fix the auth bug"
+
+# Add a memory manually
+aiana memory add "cortex uses uv for Python deps" --type pattern
+
+# Recall context for a project
+aiana memory recall git-steer
+```
+
+### Preferences
+
+```bash
+# Add permanent preference
+aiana prefer "Uses conventional commits"
+
+# Add temporary/recent context
+aiana prefer "Working on Aiana docs" --temporary
+```
+
+### MCP Server
+
+```bash
+# Start MCP server
+aiana mcp
+
+# Check system status
 aiana status
 ```
 
+---
+
+## MCP Server Tools
+
+When running as an MCP server, Aiana exposes these tools to Claude:
+
+| Tool | Description |
+|------|-------------|
+| `memory_search` | Semantic search across memories |
+| `memory_add` | Save a memory or note |
+| `memory_recall` | Get context for a project |
+| `session_list` | List recorded sessions |
+| `session_show` | View session details |
+| `preference_add` | Add user preferences |
+| `aiana_status` | System health check |
+
+### Claude Desktop Integration
+
+```json
+{
+  "mcpServers": {
+    "aiana": {
+      "command": "aiana",
+      "args": ["mcp"]
+    }
+  }
+}
+```
+
+---
+
 ## Docker Configuration
 
-### docker-compose.yml
+### Full Stack (docker-compose.yml)
 
 ```yaml
 version: '3.8'
@@ -141,18 +206,30 @@ version: '3.8'
 services:
   aiana:
     image: ry-ops/aiana:latest
-    container_name: aiana
-    restart: unless-stopped
+    depends_on:
+      - redis
+      - qdrant
     volumes:
-      # Mount Claude Code directory (read-only)
       - ~/.claude:/home/aiana/.claude:ro
-      # Persist Aiana data
       - aiana-data:/home/aiana/.aiana
+    ports:
+      - "8765:8765"  # MCP server
     environment:
-      - TZ=America/Chicago
+      - REDIS_URL=redis://redis:6379
+      - QDRANT_URL=http://qdrant:6333
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    volumes:
+      - qdrant-data:/qdrant/storage
 
 volumes:
   aiana-data:
+  qdrant-data:
 ```
 
 ### Environment Variables
@@ -160,39 +237,16 @@ volumes:
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `TZ` | Timezone | `UTC` |
+| `REDIS_URL` | Redis connection URL | `redis://localhost:6379` |
+| `QDRANT_URL` | Qdrant server URL | `http://localhost:6333` |
+| `AIANA_MCP_PORT` | MCP server port | `8765` |
+| `AIANA_EMBEDDING_MODEL` | Embedding model | `all-MiniLM-L6-v2` |
 
-### Volumes
-
-| Path | Description |
-|------|-------------|
-| `/home/aiana/.claude` | Claude Code data (mount read-only) |
-| `/home/aiana/.aiana` | Aiana database and config |
-
-### Commands
-
-```bash
-# Start monitoring (default)
-docker compose up -d
-
-# View sessions
-docker compose exec aiana aiana list
-
-# Search conversations
-docker compose exec aiana aiana search "query"
-
-# Export session
-docker compose exec aiana aiana export <id> --format markdown
-
-# Shell access
-docker compose exec aiana shell
-
-# View logs
-docker compose logs -f aiana
-```
+---
 
 ## Configuration
 
-Configuration file: `~/.aiana/config.yaml` (or `/home/aiana/.aiana/config.yaml` in Docker)
+Configuration file: `~/.aiana/config.yaml`
 
 ```yaml
 storage:
@@ -212,114 +266,101 @@ privacy:
   encrypt_at_rest: false
 ```
 
-## Architecture
+---
 
-See [Architecture Documentation](docs/ARCHITECTURE.md) for full technical details.
+## How Context Injection Works
 
+On every `SessionStart`, Aiana:
+
+1. **Loads your profile** - Static preferences you've saved
+2. **Fetches project context** - Recent work in this project
+3. **Searches semantically** - Finds relevant memories
+4. **Injects context** - Adds `<aiana-context>` block
+
+```xml
+<aiana-context>
+## User Preferences (Persistent)
+- Prefers TypeScript over JavaScript
+- Uses ESLint flat config (v9+)
+- Commits with conventional format
+
+## Project: git-steer
+### Recent Activity
+- Fixed 9 security vulnerabilities
+- Updated to vitest 4.x
+- Created blog post series
+
+## Recent Context
+- Working on Aiana documentation
+</aiana-context>
 ```
-~/.aiana/
-├── config.yaml          # Configuration
-├── conversations.db     # SQLite database with FTS5
-└── exports/             # Exported sessions
-```
+
+Claude sees this context and adapts to YOUR patterns.
+
+---
 
 ## Documentation
 
 - [Architecture](docs/ARCHITECTURE.md) - Technical design and components
+- [Storage Backends](docs/STORAGE.md) - SQLite, Redis, Qdrant configuration
+- [MCP Server](docs/MCP_SERVER.md) - MCP integration and tools
+- [Context Injection](docs/CONTEXT_INJECTION.md) - How memory injection works
 - [Claude Code Internals](docs/CLAUDE_CODE_INTERNALS.md) - File formats, hooks, APIs
-- [Anthropic API Reference](docs/ANTHROPIC_API_REFERENCE.md) - API documentation
-- [TOS Compatibility Analysis](docs/TOS_COMPATIBILITY_ANALYSIS.md) - Legal compliance
+- [TOS Compatibility](docs/TOS_COMPATIBILITY_ANALYSIS.md) - Legal compliance
+
+---
 
 ## Privacy & Security
 
 Aiana is designed with privacy as a core principle:
 
-- **Local Only**: All data stored on your machine
-- **No Cloud Sync**: Data never leaves your system
-- **User Control**: You decide what gets recorded
-- **Read-Only Access**: Docker mounts Claude directory as read-only
-- **Non-Root Container**: Runs as unprivileged user
-- **Encryption**: Optional encryption at rest (planned)
+- **Local Only** - All data stored on your machine
+- **No Cloud Sync** - Data never leaves your system
+- **User Control** - You decide what gets recorded
+- **Read-Only Access** - Docker mounts Claude directory as read-only
+- **Non-Root Container** - Runs as unprivileged user
 
-## Claude Code Integration
-
-For local installation, Aiana integrates via Claude Code's official hooks system:
-
-```json
-{
-  "hooks": {
-    "SessionStart": [{
-      "hooks": [{"type": "command", "command": "aiana hook session-start"}]
-    }],
-    "PostToolUse": [{
-      "matcher": "*",
-      "hooks": [{"type": "command", "command": "aiana hook post-tool"}]
-    }],
-    "SessionEnd": [{
-      "hooks": [{"type": "command", "command": "aiana hook session-end"}]
-    }]
-  }
-}
-```
-
-In Docker mode, Aiana uses file watching instead of hooks for monitoring.
-
-## Development
-
-```bash
-# Clone repository
-git clone https://github.com/ry-ops/aiana
-cd aiana
-
-# Create virtual environment
-python -m venv .venv
-source .venv/bin/activate
-
-# Install dev dependencies
-pip install -e ".[dev]"
-
-# Run tests
-pytest
-
-# Run linting
-ruff check .
-mypy src/
-
-# Build Docker image
-docker build -t ry-ops/aiana .
-```
+---
 
 ## Roadmap
 
-- [x] Phase 0: Research & Documentation
-  - [x] Claude Code internals research
-  - [x] Anthropic API documentation
-  - [x] TOS compatibility analysis
-  - [x] Architecture design
-- [x] Phase 1: Core MVP
-  - [x] Hook handler implementation
-  - [x] File watcher
+- [x] **Phase 1: Core MVP**
+  - [x] Hook-based session capture
   - [x] SQLite storage with FTS5
   - [x] CLI interface
   - [x] Docker support
-- [ ] Phase 2: Enhanced Features
+
+- [x] **Phase 2: Memory Layer**
+  - [x] Redis caching
+  - [x] Qdrant vector storage
+  - [x] Semantic search
+  - [x] Context injection
+  - [x] MCP server mode
+
+- [ ] **Phase 3: Intelligence**
+  - [ ] Automatic pattern extraction
+  - [ ] Session summaries
+  - [ ] Cross-session linking
+  - [ ] Workflow suggestions
+
+- [ ] **Phase 4: Polish**
   - [ ] Secret redaction
   - [ ] Encryption at rest
-  - [ ] Export formats (HTML)
-  - [ ] Session summaries
-- [ ] Phase 3: Advanced
-  - [ ] MCP server mode
-  - [ ] Web UI
-  - [ ] Team support
+  - [ ] Web UI (optional)
+
+---
 
 ## Related Projects
 
-Community tools for Claude Code conversation management:
+**ry-ops ecosystem:**
+- [git-steer](https://github.com/ry-ops/git-steer) - GitHub autonomy engine via MCP
+- [cortex](https://github.com/ry-ops/cortex) - Multi-agent AI system
 
+**Community tools:**
 - [ccusage](https://github.com/ryoppippi/ccusage) - Cost/token tracking
 - [claude-code-log](https://github.com/daaain/claude-code-log) - JSONL to HTML converter
-- [claude-history](https://github.com/thejud/claude-history) - History extraction
-- [claude-JSONL-browser](https://github.com/withLinda/claude-JSONL-browser) - Web-based viewer
+
+---
 
 ## Contributing
 
@@ -331,7 +372,10 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ---
 
-**Project**: Part of the [@ry-ops](https://github.com/ry-ops) ecosystem
-**Status**: Phase 1 Complete - MVP Ready
-**Created**: 2025-10-31
-**Updated**: 2025-12-09
+**Repository:** [github.com/ry-ops/aiana](https://github.com/ry-ops/aiana)
+
+**Blog Post:** [Personal AI Operations Memory](https://ry-ops.dev/posts/2026-02-01-personal-ai-operations-memory)
+
+**Status:** Phase 2 Complete - Memory Layer Ready
+
+**Updated:** 2026-02-01
