@@ -1,5 +1,5 @@
 
-<img src="https://github.com/ry-ops/aiana/blob/main/aiana.png" width="100%">
+<img src="https://github.com/ry-ops/aiana/blob/main/Aiana.png" width="100%">
 
 # Aiana
 
