@@ -44,12 +44,16 @@ All data stays on your machine in `~/.aiana/`.
 - [x] CLI interface (list, show, search, export)
 - [x] Full-text search
 - [x] Docker support
+- [x] **Redis caching** - Fast session state and context caching
+- [x] **Qdrant vector storage** - Semantic search across memories
+- [x] **MCP server mode** - Expose memory tools to Claude
+- [x] **Context injection** - Auto-inject relevant memories at session start
+- [x] **User preferences** - Persistent and dynamic preference tracking
 
 ### Planned
 - [ ] Secret redaction
 - [ ] Encryption at rest
 - [ ] Session summaries
-- [ ] MCP server mode
 - [ ] Web UI (optional)
 
 ## Quick Start

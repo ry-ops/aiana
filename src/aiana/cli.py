@@ -334,14 +334,53 @@ def status():
     stats = storage.get_stats()
     config = load_config()
 
+    # SQLite stats
     console.print(Panel(
         f"[bold]Sessions[/bold]: {stats['sessions']}\n"
         f"[bold]Messages[/bold]: {stats['messages']}\n"
         f"[bold]Total Tokens[/bold]: {stats['total_tokens']:,}\n"
         f"[bold]Database Size[/bold]: {stats['db_size_bytes'] / 1024:.1f} KB",
-        title="Storage Statistics",
+        title="SQLite Storage",
     ))
 
+    # Redis stats
+    try:
+        from aiana.storage.redis import RedisCache
+        redis = RedisCache()
+        redis_stats = redis.get_stats()
+        status_icon = "[green]Connected[/green]" if redis_stats.get("connected") else "[red]Disconnected[/red]"
+        console.print(Panel(
+            f"[bold]Status[/bold]: {status_icon}\n"
+            f"[bold]Memory Used[/bold]: {redis_stats.get('used_memory', 'N/A')}\n"
+            f"[bold]Active Sessions[/bold]: {redis_stats.get('active_sessions', 0)}",
+            title="Redis Cache",
+        ))
+    except Exception:
+        console.print(Panel(
+            "[dim]Not configured or not running[/dim]",
+            title="Redis Cache",
+        ))
+
+    # Qdrant stats
+    try:
+        from aiana.storage.qdrant import QdrantStorage
+        from aiana.embeddings import get_embedder
+        embedder = get_embedder()
+        qdrant = QdrantStorage(embedder=embedder)
+        qdrant_stats = qdrant.get_stats()
+        console.print(Panel(
+            f"[bold]Status[/bold]: [green]{qdrant_stats.get('status', 'unknown')}[/green]\n"
+            f"[bold]Total Memories[/bold]: {qdrant_stats.get('total_memories', 0)}\n"
+            f"[bold]Indexed Vectors[/bold]: {qdrant_stats.get('indexed_vectors', 0)}",
+            title="Qdrant Vector Store",
+        ))
+    except Exception:
+        console.print(Panel(
+            "[dim]Not configured or not running[/dim]",
+            title="Qdrant Vector Store",
+        ))
+
+    # Configuration
     console.print(Panel(
         f"[bold]Storage Path[/bold]: {config.storage.path}\n"
         f"[bold]Retention[/bold]: {config.retention.days} days\n"
@@ -446,6 +485,183 @@ def config(show: bool, reset: bool):
     console.print("\nUse --show to view current settings")
     console.print("Use --reset to restore defaults")
     console.print(f"\nEdit {config_path} directly to customize settings.")
+
+
+# ============================================================================
+# MCP Server
+# ============================================================================
+
+
+@main.command()
+@click.option("--port", default=8765, help="Port for MCP server (default 8765)")
+def mcp(port: int):
+    """Start Aiana as an MCP server."""
+    try:
+        from aiana.mcp.server import AianaMCPServer
+        import asyncio
+
+        console.print("[bold]Starting Aiana MCP Server...[/bold]")
+        console.print(f"[dim]Exposing memory tools via MCP protocol[/dim]")
+
+        server = AianaMCPServer()
+        asyncio.run(server.run())
+
+    except ImportError as e:
+        console.print(f"[red]MCP not available: {e}[/red]")
+        console.print("Install with: pip install aiana[mcp]")
+    except KeyboardInterrupt:
+        console.print("\n[yellow]MCP server stopped[/yellow]")
+
+
+# ============================================================================
+# Memory Commands
+# ============================================================================
+
+
+@main.group()
+def memory():
+    """Manage Aiana memories."""
+    pass
+
+
+@memory.command("search")
+@click.argument("query")
+@click.option("-p", "--project", help="Filter by project")
+@click.option("-l", "--limit", default=10, help="Maximum results")
+def memory_search(query: str, project: Optional[str], limit: int):
+    """Search memories semantically."""
+    try:
+        from aiana.storage.qdrant import QdrantStorage
+        from aiana.embeddings import get_embedder
+
+        embedder = get_embedder()
+        storage = QdrantStorage(embedder=embedder)
+
+        results = storage.search(query=query, project=project, limit=limit)
+
+        if not results:
+            console.print(f"[dim]No results for: {query}[/dim]")
+            return
+
+        console.print(f"[bold]Found {len(results)} results for:[/bold] {query}\n")
+
+        for r in results:
+            score = int(r["score"] * 100)
+            content = r["content"][:200]
+            console.print(f"[cyan]{score}% match[/cyan]")
+            console.print(f"  {content}...")
+            if r.get("project"):
+                console.print(f"  [dim]Project: {r['project']}[/dim]")
+            console.print()
+
+    except ImportError:
+        console.print("[red]Vector search not available.[/red]")
+        console.print("Install with: pip install aiana[vector]")
+
+        # Fallback to SQLite FTS
+        console.print("\n[dim]Falling back to full-text search...[/dim]\n")
+        storage = AianaStorage()
+        messages = storage.search(query, project=project, limit=limit)
+
+        if not messages:
+            console.print(f"[dim]No results for: {query}[/dim]")
+            return
+
+        for m in messages:
+            console.print(f"[cyan]{m.type.value}[/cyan] ({m.session_id[:8]})")
+            console.print(f"  {m.content[:200]}...")
+            console.print()
+
+
+@memory.command("add")
+@click.argument("content")
+@click.option("-t", "--type", "memory_type", default="note",
+              type=click.Choice(["note", "preference", "pattern", "insight"]))
+@click.option("-p", "--project", help="Associated project")
+def memory_add(content: str, memory_type: str, project: Optional[str]):
+    """Add a memory manually."""
+    try:
+        from aiana.storage.qdrant import QdrantStorage
+        from aiana.embeddings import get_embedder
+
+        embedder = get_embedder()
+        storage = QdrantStorage(embedder=embedder)
+
+        memory_id = storage.add_memory(
+            content=content,
+            session_id="manual",
+            project=project,
+            memory_type=memory_type,
+        )
+
+        console.print(f"[green]Memory saved![/green]")
+        console.print(f"ID: {memory_id}")
+        console.print(f"Type: {memory_type}")
+        if project:
+            console.print(f"Project: {project}")
+
+    except ImportError:
+        console.print("[red]Vector storage not available.[/red]")
+        console.print("Install with: pip install aiana[vector]")
+
+
+@memory.command("recall")
+@click.argument("project")
+@click.option("-m", "--max-items", default=5, help="Max items per section")
+def memory_recall(project: str, max_items: int):
+    """Recall context for a project."""
+    try:
+        from aiana.context import ContextInjector
+        from aiana.storage.redis import RedisCache
+        from aiana.storage.qdrant import QdrantStorage
+        from aiana.embeddings import get_embedder
+
+        embedder = get_embedder()
+        qdrant = QdrantStorage(embedder=embedder)
+        redis = RedisCache()
+        sqlite = AianaStorage()
+
+        injector = ContextInjector(
+            redis_cache=redis,
+            qdrant_storage=qdrant,
+            sqlite_storage=sqlite,
+        )
+
+        context = injector.generate_context(
+            cwd=f"/projects/{project}",
+            max_items=max_items,
+        )
+
+        console.print(Panel(context, title=f"Context for {project}"))
+
+    except ImportError as e:
+        console.print(f"[red]Context injection not available: {e}[/red]")
+        console.print("Install with: pip install aiana[all]")
+
+
+# ============================================================================
+# Preference Commands
+# ============================================================================
+
+
+@main.command()
+@click.argument("preference")
+@click.option("--temporary", is_flag=True, help="Make preference temporary (dynamic)")
+def prefer(preference: str, temporary: bool):
+    """Add a user preference."""
+    try:
+        from aiana.storage.redis import RedisCache
+
+        cache = RedisCache()
+        cache.add_preference(preference, static=not temporary)
+
+        pref_type = "temporary" if temporary else "permanent"
+        console.print(f"[green]Preference saved ({pref_type})![/green]")
+        console.print(f"  {preference}")
+
+    except ImportError:
+        console.print("[red]Redis not available.[/red]")
+        console.print("Preferences require Redis. Start with docker-compose.")
 
 
 if __name__ == "__main__":

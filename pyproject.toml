@@ -37,6 +37,10 @@ dependencies = [
     "rich>=13.0.0",
     "watchdog>=4.0.0",
     "pyyaml>=6.0",
+    "redis>=5.0.0",
+    "qdrant-client>=1.7.0",
+    "sentence-transformers>=2.2.0",
+    "mcp>=1.0.0",
 ]
 
 [project.urls]
@@ -47,6 +51,7 @@ Documentation = "https://github.com/ry-ops/aiana/blob/main/README.md"
 
 [project.scripts]
 aiana = "aiana.cli:main"
+aiana-mcp = "aiana.mcp.server:main"
 
 [project.optional-dependencies]
 dev = [
@@ -61,6 +66,16 @@ dev = [
 ]
 encryption = [
     "cryptography>=41.0.0",
+]
+vector = [
+    "qdrant-client>=1.7.0",
+    "sentence-transformers>=2.2.0",
+]
+mcp = [
+    "mcp>=1.0.0",
+]
+all = [
+    "aiana[encryption,vector,mcp]",
 ]
 
 [build-system]

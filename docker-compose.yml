@@ -8,6 +8,11 @@ services:
     image: ry-ops/aiana:latest
     container_name: aiana
     restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
 
     volumes:
       # Mount Claude Code directory (read-only for safety)
@@ -16,22 +21,25 @@ services:
       # Persist Aiana data (conversations database)
       - aiana-data:/home/aiana/.aiana
 
-    # Optional: expose for future web UI
-    # ports:
-    #   - "8080:8080"
+    ports:
+      # MCP server port
+      - "8765:8765"
 
     environment:
       - TZ=${TZ:-America/Chicago}
+      - REDIS_URL=redis://redis:6379
+      - QDRANT_URL=http://qdrant:6333
+      - AIANA_MCP_PORT=8765
 
     # Resource limits
     deploy:
       resources:
         limits:
-          cpus: '0.5'
-          memory: 256M
+          cpus: '1.0'
+          memory: 512M
         reservations:
-          cpus: '0.1'
-          memory: 64M
+          cpus: '0.25'
+          memory: 128M
 
     # Health check
     healthcheck:
@@ -48,6 +56,75 @@ services:
         max-size: "10m"
         max-file: "3"
 
+  redis:
+    image: redis:7-alpine
+    container_name: aiana-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 128mb --maxmemory-policy allkeys-lru
+
+    volumes:
+      - redis-data:/data
+
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 192M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "2"
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: aiana-qdrant
+    restart: unless-stopped
+
+    volumes:
+      - qdrant-data:/qdrant/storage
+
+    environment:
+      - QDRANT__SERVICE__GRPC_PORT=6334
+      - QDRANT__SERVICE__HTTP_PORT=6333
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6333/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "2"
+
 volumes:
   aiana-data:
     name: aiana-data
+  redis-data:
+    name: aiana-redis-data
+  qdrant-data:
+    name: aiana-qdrant-data
