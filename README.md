@@ -387,6 +387,6 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 **Status:** Phase 2 Complete - Memory Layer Ready
 
-**Version:** [v1.0.0.1](https://github.com/ry-ops/aiana/releases/tag/v1.0.0.1)
+**Version:** [v1.0.0.2](https://github.com/ry-ops/aiana/releases/tag/v1.0.0.2)
 
 **Updated:** 2026-02-02
