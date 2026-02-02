@@ -7,6 +7,10 @@
 
 Aiana transforms Claude Code from stateless sessions into a compound learning system. It captures conversations, embeds them as vectors, and injects relevant context at session start—so your AI assistant remembers YOUR patterns.
 
+<p align="center">
+  <img src="./assets/aiana-flow.svg" alt="Aiana Data Flow" width="100%">
+</p>
+
 ## The Vision
 
 ```
@@ -20,35 +24,45 @@ Every session makes future sessions better. Your workflows get encoded. Your pre
 
 ## Architecture
 
-```
-┌──────────────────────────────────────────────────────────────────┐
-│                            AIANA                                  │
-│                                                                   │
-│  ┌─────────────┐    ┌─────────────┐    ┌─────────────────────┐   │
-│  │   SQLite    │    │    Redis    │    │      Qdrant         │   │
-│  │   (FTS5)    │    │   (Cache)   │    │  (Vector Search)    │   │
-│  │             │    │             │    │                     │   │
-│  │ - Sessions  │    │ - Hot data  │    │ - Embeddings        │   │
-│  │ - Messages  │    │ - Context   │    │ - Semantic search   │   │
-│  │ - Full-text │    │ - Prefs     │    │ - Similar memories  │   │
-│  └─────────────┘    └─────────────┘    └─────────────────────┘   │
-│                              │                                    │
-│                              ▼                                    │
-│                    ┌─────────────────┐                           │
-│                    │ Context Injector│                           │
-│                    │                 │                           │
-│                    │ SessionStart →  │                           │
-│                    │ Inject memories │                           │
-│                    └─────────────────┘                           │
-│                              │                                    │
-│                              ▼                                    │
-│                    ┌─────────────────┐                           │
-│                    │   MCP Server    │                           │
-│                    │                 │                           │
-│                    │ Expose tools to │                           │
-│                    │ Claude Code     │                           │
-│                    └─────────────────┘                           │
-└──────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TB
+    subgraph CC["🖥️ Claude Code"]
+        sessions["Sessions & Conversations"]
+    end
+
+    subgraph AIANA["🧠 AIANA - Memory Layer"]
+        direction TB
+        capture["📥 Session Capture"]
+        embed["🔢 Embedding Engine<br/><i>all-MiniLM-L6-v2</i>"]
+        inject["💉 Context Injector"]
+        mcp["🔌 MCP Server"]
+    end
+
+    subgraph STORAGE["💾 Storage Backends"]
+        direction LR
+        sqlite[("📄 SQLite<br/>FTS5 Full-Text")]
+        redis[("⚡ Redis<br/>Session Cache")]
+        qdrant[("🔮 Qdrant<br/>Vector Search")]
+    end
+
+    CC -->|"hooks API"| capture
+    capture --> embed
+    embed --> sqlite
+    embed --> redis
+    embed --> qdrant
+
+    sqlite --> inject
+    redis --> inject
+    qdrant --> inject
+
+    inject -->|"context block"| CC
+    mcp <-->|"tools"| CC
+
+    style AIANA fill:#7C3AED,color:#fff
+    style CC fill:#D97706,color:#fff
+    style sqlite fill:#0EA5E9,color:#fff
+    style redis fill:#DC2626,color:#fff
+    style qdrant fill:#059669,color:#fff
 ```
 
 ---
@@ -201,8 +215,6 @@ When running as an MCP server, Aiana exposes these tools to Claude:
 ### Full Stack (docker-compose.yml)
 
 ```yaml
-version: '3.8'
-
 services:
   aiana:
     image: ry-ops/aiana:latest
@@ -378,4 +390,6 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 **Status:** Phase 2 Complete - Memory Layer Ready
 
-**Updated:** 2026-02-01
+**Version:** [v1.0.0.1](https://github.com/ry-ops/aiana/releases/tag/v1.0.0.1)
+
+**Updated:** 2026-02-02

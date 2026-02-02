@@ -1,0 +1,160 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 300">
+  <defs>
+    <!-- Gradients -->
+    <linearGradient id="claudeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#D97706;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#F59E0B;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="aianaGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#7C3AED;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#A78BFA;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="sqliteGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0EA5E9;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#38BDF8;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="redisGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#DC2626;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#F87171;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="qdrantGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#059669;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#34D399;stop-opacity:1" />
+    </linearGradient>
+
+    <!-- Glow filter -->
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- Pulse animation for data dots -->
+    <circle id="dataDot" r="4" fill="#A78BFA">
+      <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite"/>
+    </circle>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="300" fill="#0F172A" rx="12"/>
+
+  <!-- Claude Code Box -->
+  <g transform="translate(50, 100)">
+    <rect width="120" height="100" rx="12" fill="url(#claudeGrad)" filter="url(#glow)">
+      <animate attributeName="opacity" values="0.9;1;0.9" dur="3s" repeatCount="indefinite"/>
+    </rect>
+    <text x="60" y="45" text-anchor="middle" fill="white" font-family="system-ui" font-weight="600" font-size="14">Claude</text>
+    <text x="60" y="65" text-anchor="middle" fill="white" font-family="system-ui" font-weight="600" font-size="14">Code</text>
+    <!-- Terminal icon -->
+    <rect x="35" y="72" width="50" height="20" rx="3" fill="rgba(0,0,0,0.3)"/>
+    <text x="42" y="86" fill="#22D3EE" font-family="monospace" font-size="10">$ _</text>
+  </g>
+
+  <!-- Arrow 1: Claude to Aiana -->
+  <g>
+    <line x1="180" y1="150" x2="280" y2="150" stroke="#475569" stroke-width="2" stroke-dasharray="8,4"/>
+    <!-- Animated data packet -->
+    <circle r="6" fill="#F59E0B" filter="url(#glow)">
+      <animateMotion dur="2s" repeatCount="indefinite" path="M180,150 L280,150"/>
+      <animate attributeName="opacity" values="0;1;1;0" dur="2s" repeatCount="indefinite"/>
+    </circle>
+    <text x="230" y="138" text-anchor="middle" fill="#94A3B8" font-family="system-ui" font-size="10">sessions</text>
+  </g>
+
+  <!-- Aiana Core Box -->
+  <g transform="translate(290, 75)">
+    <rect width="140" height="150" rx="16" fill="url(#aianaGrad)" filter="url(#glow)">
+      <animate attributeName="opacity" values="0.95;1;0.95" dur="2s" repeatCount="indefinite"/>
+    </rect>
+    <!-- Brain/Memory icon -->
+    <circle cx="70" cy="50" r="25" fill="rgba(255,255,255,0.15)">
+      <animate attributeName="r" values="25;28;25" dur="2s" repeatCount="indefinite"/>
+    </circle>
+    <text x="70" y="55" text-anchor="middle" fill="white" font-size="24">🧠</text>
+    <text x="70" y="95" text-anchor="middle" fill="white" font-family="system-ui" font-weight="700" font-size="18">AIANA</text>
+    <text x="70" y="115" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-family="system-ui" font-size="10">Memory Layer</text>
+    <!-- Pulse ring -->
+    <circle cx="70" cy="50" r="35" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1">
+      <animate attributeName="r" values="35;45;35" dur="3s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.5;0;0.5" dur="3s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+
+  <!-- Storage Backends -->
+
+  <!-- SQLite -->
+  <g transform="translate(580, 30)">
+    <rect width="100" height="60" rx="8" fill="url(#sqliteGrad)" filter="url(#glow)"/>
+    <text x="50" y="25" text-anchor="middle" fill="white" font-size="16">📄</text>
+    <text x="50" y="45" text-anchor="middle" fill="white" font-family="system-ui" font-weight="600" font-size="12">SQLite</text>
+    <text x="50" y="56" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-family="system-ui" font-size="9">FTS5</text>
+  </g>
+
+  <!-- Redis -->
+  <g transform="translate(580, 120)">
+    <rect width="100" height="60" rx="8" fill="url(#redisGrad)" filter="url(#glow)"/>
+    <text x="50" y="25" text-anchor="middle" fill="white" font-size="16">⚡</text>
+    <text x="50" y="45" text-anchor="middle" fill="white" font-family="system-ui" font-weight="600" font-size="12">Redis</text>
+    <text x="50" y="56" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-family="system-ui" font-size="9">Cache</text>
+  </g>
+
+  <!-- Qdrant -->
+  <g transform="translate(580, 210)">
+    <rect width="100" height="60" rx="8" fill="url(#qdrantGrad)" filter="url(#glow)"/>
+    <text x="50" y="25" text-anchor="middle" fill="white" font-size="16">🔮</text>
+    <text x="50" y="45" text-anchor="middle" fill="white" font-family="system-ui" font-weight="600" font-size="12">Qdrant</text>
+    <text x="50" y="56" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-family="system-ui" font-size="9">Vectors</text>
+  </g>
+
+  <!-- Arrows: Aiana to Storage -->
+
+  <!-- To SQLite -->
+  <g>
+    <path d="M430,130 Q500,60 570,60" fill="none" stroke="#475569" stroke-width="2" stroke-dasharray="6,3"/>
+    <circle r="5" fill="#38BDF8" filter="url(#glow)">
+      <animateMotion dur="1.8s" repeatCount="indefinite" path="M430,130 Q500,60 570,60"/>
+      <animate attributeName="opacity" values="0;1;1;0" dur="1.8s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+
+  <!-- To Redis -->
+  <g>
+    <line x1="430" y1="150" x2="570" y2="150" stroke="#475569" stroke-width="2" stroke-dasharray="6,3"/>
+    <circle r="5" fill="#F87171" filter="url(#glow)">
+      <animateMotion dur="1.5s" repeatCount="indefinite" path="M430,150 L570,150"/>
+      <animate attributeName="opacity" values="0;1;1;0" dur="1.5s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+
+  <!-- To Qdrant -->
+  <g>
+    <path d="M430,170 Q500,240 570,240" fill="none" stroke="#475569" stroke-width="2" stroke-dasharray="6,3"/>
+    <circle r="5" fill="#34D399" filter="url(#glow)">
+      <animateMotion dur="2.2s" repeatCount="indefinite" path="M430,170 Q500,240 570,240"/>
+      <animate attributeName="opacity" values="0;1;1;0" dur="2.2s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+
+  <!-- Return arrow: Context injection -->
+  <g>
+    <path d="M280,170 Q200,220 170,190" fill="none" stroke="#A78BFA" stroke-width="2" stroke-dasharray="4,4"/>
+    <circle r="5" fill="#A78BFA" filter="url(#glow)">
+      <animateMotion dur="2.5s" repeatCount="indefinite" path="M280,170 Q200,220 170,190"/>
+      <animate attributeName="opacity" values="0;1;1;0" dur="2.5s" repeatCount="indefinite"/>
+    </circle>
+    <text x="210" y="210" text-anchor="middle" fill="#A78BFA" font-family="system-ui" font-size="10">context</text>
+  </g>
+
+  <!-- Labels -->
+  <text x="400" y="285" text-anchor="middle" fill="#64748B" font-family="system-ui" font-size="11">
+    Sessions → Memory → Compound Learning
+  </text>
+
+  <!-- Version badge -->
+  <g transform="translate(720, 12)">
+    <rect width="60" height="20" rx="10" fill="rgba(124,58,237,0.3)"/>
+    <text x="30" y="14" text-anchor="middle" fill="#A78BFA" font-family="system-ui" font-weight="600" font-size="10">v1.0.0.1</text>
+  </g>
+</svg>
