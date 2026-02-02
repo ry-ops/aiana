@@ -1,6 +1,3 @@
-
-<img src="https://github.com/ry-ops/aiana/blob/main/Aiana.png" width="100%">
-
 # Aiana
 
 **Personal AI Operations Memory for Claude Code**
