@@ -291,8 +291,7 @@ class QdrantStorage:
         info = self.client.get_collection(COLLECTION_NAME)
         return {
             "total_memories": info.points_count,
-            "vectors_size": info.vectors_count,
-            "indexed_vectors": info.indexed_vectors_count,
+            "indexed_vectors": info.indexed_vectors_count or 0,
             "status": info.status.value,
         }
 
