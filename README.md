@@ -32,6 +32,7 @@ Every session makes future sessions better. Your workflows get encoded. Your pre
 flowchart TB
     subgraph CC["🖥️ Claude Code"]
         sessions["Sessions & Conversations"]
+        rating["⭐ Memory Rating"]
     end
 
     subgraph AIANA["🧠 AIANA - Memory Layer"]
@@ -39,12 +40,13 @@ flowchart TB
         capture["📥 Session Capture"]
         embed["🔢 Embedding Engine<br/><i>all-MiniLM-L6-v2</i>"]
         inject["💉 Context Injector"]
+        feedback["📊 Feedback Processor"]
         mcp["🔌 MCP Server"]
     end
 
     subgraph STORAGE["💾 Storage Backends"]
         direction LR
-        sqlite[("📄 SQLite<br/>FTS5 Full-Text")]
+        sqlite[("📄 SQLite<br/>FTS5 + Feedback")]
         redis[("⚡ Redis<br/>Session Cache")]
         qdrant[("🔮 Qdrant<br/>Vector Search")]
     end
@@ -62,11 +64,16 @@ flowchart TB
     inject -->|"context block"| CC
     mcp <-->|"tools"| CC
 
+    rating -->|"helpful/not/harmful"| feedback
+    feedback -->|"ratings"| sqlite
+
     style AIANA fill:#7C3AED,color:#fff
     style CC fill:#D97706,color:#fff
     style sqlite fill:#0EA5E9,color:#fff
     style redis fill:#DC2626,color:#fff
     style qdrant fill:#059669,color:#fff
+    style feedback fill:#EC4899,color:#fff
+    style rating fill:#F59E0B,color:#fff
 ```
 
 ---
