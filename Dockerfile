@@ -1,9 +1,12 @@
 # Aiana - AI Conversation Attendant for Claude Code
-# Multi-stage build for minimal image size
+# Multi-stage build using uv for fast, reproducible installs
 
 FROM python:3.12-slim AS builder
 
 WORKDIR /app
+
+# Install uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
 # Install build dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -11,11 +14,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy project files
-COPY pyproject.toml README.md LICENSE ./
+COPY pyproject.toml uv.lock README.md LICENSE ./
 COPY src/ ./src/
 
-# Install package
-RUN pip install --no-cache-dir --user -e .
+# Install dependencies with uv (frozen = use lockfile exactly)
+ENV UV_COMPILE_BYTECODE=1
+ENV UV_LINK_MODE=copy
+RUN uv sync --frozen --no-dev
 
 # Production stage
 FROM python:3.12-slim
@@ -30,8 +35,8 @@ RUN useradd --create-home --shell /bin/bash aiana
 
 WORKDIR /app
 
-# Copy installed packages from builder
-COPY --from=builder /root/.local /home/aiana/.local
+# Copy virtual environment from builder
+COPY --from=builder /app/.venv /app/.venv
 
 # Copy application code
 COPY --chown=aiana:aiana src/ ./src/
@@ -42,7 +47,7 @@ COPY --chown=aiana:aiana docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # Set environment
-ENV PATH="/home/aiana/.local/bin:$PATH"
+ENV PATH="/app/.venv/bin:$PATH"
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 
