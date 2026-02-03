@@ -92,6 +92,26 @@ class AianaStorage:
                     INSERT INTO messages_fts(rowid, content)
                     VALUES (new.rowid, new.content);
                 END;
+
+                -- Feedback table for memory recall quality
+                CREATE TABLE IF NOT EXISTS memory_feedback (
+                    id TEXT PRIMARY KEY,
+                    memory_id TEXT NOT NULL,
+                    memory_source TEXT NOT NULL,  -- 'qdrant', 'sqlite', 'fts'
+                    query TEXT NOT NULL,          -- original search query
+                    rating INTEGER NOT NULL,      -- 1=helpful, 0=not helpful, -1=harmful
+                    reason TEXT,                  -- optional explanation
+                    session_id TEXT,              -- session where feedback was given
+                    timestamp TIMESTAMP NOT NULL,
+                    metadata TEXT DEFAULT '{}'
+                );
+
+                CREATE INDEX IF NOT EXISTS idx_feedback_memory
+                    ON memory_feedback(memory_id);
+                CREATE INDEX IF NOT EXISTS idx_feedback_rating
+                    ON memory_feedback(rating);
+                CREATE INDEX IF NOT EXISTS idx_feedback_timestamp
+                    ON memory_feedback(timestamp DESC);
             """)
 
     def create_session(self, session: Session) -> None:
@@ -293,12 +313,141 @@ class AianaStorage:
             total_tokens = conn.execute(
                 "SELECT SUM(token_count) FROM sessions"
             ).fetchone()[0] or 0
+            feedback_count = conn.execute(
+                "SELECT COUNT(*) FROM memory_feedback"
+            ).fetchone()[0]
 
             return {
                 "sessions": session_count,
                 "messages": message_count,
                 "total_tokens": total_tokens,
+                "feedback_entries": feedback_count,
                 "db_size_bytes": self.db_path.stat().st_size if self.db_path.exists() else 0,
+            }
+
+    def add_feedback(
+        self,
+        memory_id: str,
+        memory_source: str,
+        query: str,
+        rating: int,
+        reason: Optional[str] = None,
+        session_id: Optional[str] = None,
+        metadata: Optional[dict] = None,
+    ) -> str:
+        """Add feedback for a recalled memory.
+
+        Args:
+            memory_id: ID of the memory being rated
+            memory_source: Where the memory came from (qdrant, sqlite, fts)
+            query: The original search query
+            rating: 1=helpful, 0=not helpful, -1=harmful/wrong
+            reason: Optional explanation
+            session_id: Current session ID
+            metadata: Additional metadata
+
+        Returns:
+            The feedback ID
+        """
+        import uuid
+        feedback_id = str(uuid.uuid4())
+
+        with self._get_connection() as conn:
+            conn.execute(
+                """
+                INSERT INTO memory_feedback
+                (id, memory_id, memory_source, query, rating, reason, session_id, timestamp, metadata)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    feedback_id,
+                    memory_id,
+                    memory_source,
+                    query,
+                    rating,
+                    reason,
+                    session_id,
+                    datetime.now().isoformat(),
+                    json.dumps(metadata or {}),
+                ),
+            )
+        return feedback_id
+
+    def get_memory_feedback_stats(self, memory_id: str) -> dict:
+        """Get aggregated feedback stats for a memory.
+
+        Returns:
+            Dict with helpful_count, not_helpful_count, harmful_count, avg_rating
+        """
+        with self._get_connection() as conn:
+            row = conn.execute(
+                """
+                SELECT
+                    SUM(CASE WHEN rating = 1 THEN 1 ELSE 0 END) as helpful,
+                    SUM(CASE WHEN rating = 0 THEN 1 ELSE 0 END) as not_helpful,
+                    SUM(CASE WHEN rating = -1 THEN 1 ELSE 0 END) as harmful,
+                    AVG(rating) as avg_rating,
+                    COUNT(*) as total
+                FROM memory_feedback
+                WHERE memory_id = ?
+                """,
+                (memory_id,),
+            ).fetchone()
+
+            return {
+                "helpful": row["helpful"] or 0,
+                "not_helpful": row["not_helpful"] or 0,
+                "harmful": row["harmful"] or 0,
+                "avg_rating": row["avg_rating"] or 0,
+                "total_feedback": row["total"] or 0,
+            }
+
+    def get_feedback_summary(self, limit: int = 100) -> dict:
+        """Get overall feedback summary for improving retrieval.
+
+        Returns:
+            Summary of feedback patterns
+        """
+        with self._get_connection() as conn:
+            # Overall stats
+            overall = conn.execute(
+                """
+                SELECT
+                    COUNT(*) as total,
+                    SUM(CASE WHEN rating = 1 THEN 1 ELSE 0 END) as helpful,
+                    SUM(CASE WHEN rating = 0 THEN 1 ELSE 0 END) as not_helpful,
+                    SUM(CASE WHEN rating = -1 THEN 1 ELSE 0 END) as harmful,
+                    AVG(rating) as avg_rating
+                FROM memory_feedback
+                """
+            ).fetchone()
+
+            # Most helpful memories
+            top_memories = conn.execute(
+                """
+                SELECT memory_id, memory_source,
+                       SUM(rating) as score, COUNT(*) as feedback_count
+                FROM memory_feedback
+                GROUP BY memory_id
+                ORDER BY score DESC
+                LIMIT ?
+                """,
+                (limit,),
+            ).fetchall()
+
+            return {
+                "total_feedback": overall["total"] or 0,
+                "helpful_rate": (overall["helpful"] / overall["total"] * 100) if overall["total"] else 0,
+                "avg_rating": overall["avg_rating"] or 0,
+                "top_memories": [
+                    {
+                        "memory_id": r["memory_id"],
+                        "source": r["memory_source"],
+                        "score": r["score"],
+                        "feedback_count": r["feedback_count"],
+                    }
+                    for r in top_memories[:10]
+                ],
             }
 
     def _row_to_session(self, row: sqlite3.Row) -> Session:

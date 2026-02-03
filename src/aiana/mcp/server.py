@@ -204,6 +204,46 @@ class AianaMCPServer:
                         "properties": {},
                     },
                 ),
+                Tool(
+                    name="memory_feedback",
+                    description="Provide feedback on recalled memories to improve future retrieval. Call this after using memory_search or memory_recall to rate how helpful the results were.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "memory_id": {
+                                "type": "string",
+                                "description": "ID of the memory being rated (from search results)",
+                            },
+                            "memory_source": {
+                                "type": "string",
+                                "enum": ["semantic", "fulltext", "recall"],
+                                "description": "Source of the memory (semantic=Qdrant, fulltext=SQLite FTS, recall=context injection)",
+                            },
+                            "query": {
+                                "type": "string",
+                                "description": "The original query that returned this memory",
+                            },
+                            "rating": {
+                                "type": "integer",
+                                "enum": [1, 0, -1],
+                                "description": "1=helpful (answered the question), 0=not helpful (irrelevant), -1=harmful (wrong/misleading)",
+                            },
+                            "reason": {
+                                "type": "string",
+                                "description": "Brief explanation of the rating (optional but helpful for improving retrieval)",
+                            },
+                        },
+                        "required": ["memory_id", "memory_source", "query", "rating"],
+                    },
+                ),
+                Tool(
+                    name="feedback_summary",
+                    description="Get a summary of memory feedback to understand recall quality and patterns",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {},
+                    },
+                ),
             ]
 
         @self.server.call_tool()
@@ -246,6 +286,16 @@ class AianaMCPServer:
                     )
                 elif name == "aiana_status":
                     result = await self._status()
+                elif name == "memory_feedback":
+                    result = await self._memory_feedback(
+                        memory_id=arguments["memory_id"],
+                        memory_source=arguments["memory_source"],
+                        query=arguments["query"],
+                        rating=arguments["rating"],
+                        reason=arguments.get("reason"),
+                    )
+                elif name == "feedback_summary":
+                    result = await self._feedback_summary()
                 else:
                     result = {"error": f"Unknown tool: {name}"}
 
@@ -489,6 +539,43 @@ class AianaMCPServer:
             status["backends"]["qdrant"] = {"status": "not configured"}
 
         return status
+
+    async def _memory_feedback(
+        self,
+        memory_id: str,
+        memory_source: str,
+        query: str,
+        rating: int,
+        reason: Optional[str] = None,
+    ) -> dict:
+        """Record feedback for a recalled memory."""
+        if not self.sqlite:
+            return {"error": "SQLite storage not available"}
+
+        feedback_id = self.sqlite.add_feedback(
+            memory_id=memory_id,
+            memory_source=memory_source,
+            query=query,
+            rating=rating,
+            reason=reason,
+        )
+
+        rating_label = {1: "helpful", 0: "not helpful", -1: "harmful"}[rating]
+
+        return {
+            "status": "recorded",
+            "feedback_id": feedback_id,
+            "memory_id": memory_id,
+            "rating": rating_label,
+            "message": f"Thank you! Feedback recorded. This helps improve future memory retrieval.",
+        }
+
+    async def _feedback_summary(self) -> dict:
+        """Get summary of memory feedback."""
+        if not self.sqlite:
+            return {"error": "SQLite storage not available"}
+
+        return self.sqlite.get_feedback_summary()
 
     async def run(self) -> None:
         """Run the MCP server."""
