@@ -64,10 +64,25 @@ flowchart TB
 
 ---
 
+## What's New in v1.0.0.3
+
+### Memory Feedback System
+
+Aiana now learns from Claude's usage patterns! The new feedback system allows Claude to rate recalled memories, enabling continuous improvement of retrieval quality.
+
+- **`memory_feedback`** - Rate memories as helpful/not helpful/harmful after use
+- **`feedback_summary`** - View aggregate feedback statistics
+- **Feedback tracking** - SQLite table stores ratings with query context
+- **Future retrieval optimization** - Feedback data enables smarter ranking
+
+This creates a learning loop: better memories surface more often, irrelevant ones get demoted.
+
+---
+
 ## Features
 
 ### Storage & Search
-- **SQLite with FTS5** - Session transcripts, full-text search
+- **SQLite with FTS5** - Session transcripts, full-text search, feedback tracking
 - **Redis caching** - Fast session state, context cache, preferences
 - **Qdrant vectors** - Semantic search via sentence-transformers
 
@@ -75,6 +90,7 @@ flowchart TB
 - **Context injection** - Auto-inject relevant memories at session start
 - **User preferences** - Persistent (static) and recent (dynamic) prefs
 - **Semantic search** - Find memories by meaning, not just keywords
+- **Feedback loop** - Rate memories to improve future retrieval
 
 ### Integration
 - **MCP server mode** - Expose memory tools directly to Claude
@@ -187,10 +203,31 @@ When running as an MCP server, Aiana exposes these tools to Claude:
 | `memory_search` | Semantic search across memories |
 | `memory_add` | Save a memory or note |
 | `memory_recall` | Get context for a project |
+| `memory_feedback` | Rate recalled memories (helpful/not helpful/harmful) |
+| `feedback_summary` | View feedback statistics and patterns |
 | `session_list` | List recorded sessions |
 | `session_show` | View session details |
 | `preference_add` | Add user preferences |
 | `aiana_status` | System health check |
+
+### Using Memory Feedback
+
+After using `memory_search` or `memory_recall`, Claude should call `memory_feedback` to rate results:
+
+```json
+{
+  "memory_id": "abc123",
+  "memory_source": "semantic",
+  "query": "how did we fix the auth bug",
+  "rating": 1,
+  "reason": "Directly answered the question with relevant code"
+}
+```
+
+Rating values:
+- `1` = Helpful (answered the question)
+- `0` = Not helpful (irrelevant)
+- `-1` = Harmful (wrong or misleading)
 
 ### Claude Desktop Integration
 
@@ -198,8 +235,8 @@ When running as an MCP server, Aiana exposes these tools to Claude:
 {
   "mcpServers": {
     "aiana": {
-      "command": "aiana",
-      "args": ["mcp"]
+      "command": "docker",
+      "args": ["exec", "-i", "aiana", "aiana-mcp"]
     }
   }
 }
@@ -308,6 +345,20 @@ Claude sees this context and adapts to YOUR patterns.
 
 ---
 
+## Why SQLite + Redis + Qdrant?
+
+Aiana uses a hybrid storage architecture, each backend optimized for its purpose:
+
+| Backend | Purpose | Why |
+|---------|---------|-----|
+| **SQLite** | Persistent data (sessions, messages, feedback) | Durable, FTS5 search, complex queries, zero config |
+| **Redis** | Cache layer (session state, preferences) | Fast TTL-based expiry, low latency |
+| **Qdrant** | Vector embeddings | Semantic similarity search |
+
+**Why not just Redis?** Redis is memory-first; SQLite provides durability without extra configuration. SQLite's FTS5 is purpose-built for full-text search. The hybrid approach gives you the best of all worlds.
+
+---
+
 ## Documentation
 
 - [Architecture](docs/ARCHITECTURE.md) - Technical design and components
@@ -345,6 +396,7 @@ Aiana is designed with privacy as a core principle:
   - [x] Semantic search
   - [x] Context injection
   - [x] MCP server mode
+  - [x] Memory feedback system
 
 - [ ] **Phase 3: Intelligence**
   - [ ] Automatic pattern extraction
@@ -363,7 +415,7 @@ Aiana is designed with privacy as a core principle:
 
 **ry-ops ecosystem:**
 - [git-steer](https://github.com/ry-ops/git-steer) - GitHub autonomy engine via MCP
-- [cortex](https://github.com/ry-ops/cortex) - Multi-agent AI system
+- [cortex](https://github.com/cortex-io/cortex) - Multi-agent AI system
 
 **Community tools:**
 - [ccusage](https://github.com/ryoppippi/ccusage) - Cost/token tracking
@@ -385,8 +437,8 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 **Blog Post:** [Personal AI Operations Memory](https://ry-ops.dev/posts/2026-02-01-personal-ai-operations-memory)
 
-**Status:** Phase 2 Complete - Memory Layer Ready
+**Status:** Phase 2 Complete - Memory Feedback System Added
 
-**Version:** [v1.0.0.2](https://github.com/ry-ops/aiana/releases/tag/v1.0.0.2)
+**Version:** [v1.0.0.3](https://github.com/ry-ops/aiana/releases/tag/v1.0.0.3)
 
 **Updated:** 2026-02-02

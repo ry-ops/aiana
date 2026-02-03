@@ -1,6 +1,6 @@
 [project]
 name = "aiana"
-version = "0.1.0"
+version = "1.0.0.3"
 description = "AI conversation attendant for Claude Code - monitors and records conversations in real-time"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -20,7 +20,7 @@ keywords = [
     "claude",
 ]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
