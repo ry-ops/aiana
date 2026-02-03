@@ -155,6 +155,6 @@
   <!-- Version badge -->
   <g transform="translate(720, 12)">
     <rect width="60" height="20" rx="10" fill="rgba(124,58,237,0.3)"/>
-    <text x="30" y="14" text-anchor="middle" fill="#A78BFA" font-family="system-ui" font-weight="600" font-size="10">v1.0.0.2</text>
+    <text x="30" y="14" text-anchor="middle" fill="#A78BFA" font-family="system-ui" font-weight="600" font-size="10">v1.0.0.3</text>
   </g>
 </svg>
