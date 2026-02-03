@@ -33,6 +33,22 @@ class Message:
     tokens: Optional[int] = None
     metadata: dict[str, Any] = field(default_factory=dict)
 
+    @staticmethod
+    def _extract_text_content(content: Any) -> str:
+        """Extract text from content that may be a string or list of content blocks."""
+        if isinstance(content, str):
+            return content
+        if isinstance(content, list):
+            text_parts = []
+            for block in content:
+                if isinstance(block, dict):
+                    if block.get("type") == "text":
+                        text_parts.append(block.get("text", ""))
+                elif isinstance(block, str):
+                    text_parts.append(block)
+            return "\n".join(text_parts)
+        return str(content) if content else ""
+
     @classmethod
     def from_jsonl(cls, session_id: str, data: dict[str, Any]) -> Optional["Message"]:
         """Create a Message from a JSONL line."""
@@ -40,11 +56,12 @@ class Message:
 
         if msg_type == "user":
             message_data = data.get("message", {})
+            raw_content = message_data.get("content", "")
             return cls(
                 id=data.get("uuid", ""),
                 session_id=session_id,
                 type=MessageType.USER,
-                content=message_data.get("content", ""),
+                content=cls._extract_text_content(raw_content),
                 timestamp=cls._parse_timestamp(data.get("timestamp")),
                 role="user",
                 parent_id=data.get("parentUuid"),
@@ -59,17 +76,13 @@ class Message:
             message_data = data.get("message", {})
             content_blocks = message_data.get("content", [])
 
-            # Extract text content
-            text_parts = []
+            # Extract tool_use block if present
             tool_use = None
-            for block in content_blocks:
-                if isinstance(block, dict):
-                    if block.get("type") == "text":
-                        text_parts.append(block.get("text", ""))
-                    elif block.get("type") == "tool_use":
+            if isinstance(content_blocks, list):
+                for block in content_blocks:
+                    if isinstance(block, dict) and block.get("type") == "tool_use":
                         tool_use = block
-                elif isinstance(block, str):
-                    text_parts.append(block)
+                        break
 
             usage = message_data.get("usage", {})
             tokens = usage.get("input_tokens", 0) + usage.get("output_tokens", 0)
@@ -78,7 +91,7 @@ class Message:
                 id=data.get("uuid", ""),
                 session_id=session_id,
                 type=MessageType.ASSISTANT,
-                content="\n".join(text_parts),
+                content=cls._extract_text_content(content_blocks),
                 timestamp=cls._parse_timestamp(data.get("timestamp")),
                 role="assistant",
                 parent_id=data.get("parentUuid"),
