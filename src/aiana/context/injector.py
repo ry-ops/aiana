@@ -3,12 +3,15 @@
 Injects relevant memories and profile data at session start.
 """
 
-import os
-from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from aiana.config import load_config
+
+if TYPE_CHECKING:
+    from aiana.storage import AianaStorage
+    from aiana.storage.qdrant import QdrantStorage
+    from aiana.storage.redis import RedisCache
 
 
 class ContextInjector:
@@ -207,7 +210,7 @@ class ContextInjector:
         Returns:
             Formatted context.
         """
-        header = f"""<aiana-context>
+        header = """<aiana-context>
 The following context is recalled from your previous sessions.
 Use this to inform your responses but don't explicitly reference it.
 """

@@ -3,23 +3,25 @@
 import os
 import uuid
 from datetime import datetime
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
+
+if TYPE_CHECKING:
+    from aiana.embeddings import Embedder
 
 try:
     from qdrant_client import QdrantClient
     from qdrant_client.models import (
         Distance,
+        FieldCondition,
+        Filter,
+        MatchValue,
         PointStruct,
         VectorParams,
-        Filter,
-        FieldCondition,
-        MatchValue,
     )
     QDRANT_AVAILABLE = True
 except ImportError:
     QDRANT_AVAILABLE = False
 
-from aiana.config import load_config
 
 
 COLLECTION_NAME = "aiana_memories"

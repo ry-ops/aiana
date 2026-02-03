@@ -1,8 +1,6 @@
 """Command-line interface for Aiana."""
 
 import json
-import sys
-from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
@@ -10,14 +8,13 @@ import click
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
-from rich.text import Text
 
 from aiana import __version__
-from aiana.config import get_aiana_dir, load_config, save_config
+from aiana.config import load_config, save_config
 from aiana.hooks import HookHandler, install_hooks, uninstall_hooks
-from aiana.models import Message, MessageType
+from aiana.models import MessageType
 from aiana.storage import AianaStorage
-from aiana.watcher import TranscriptWatcher, WatcherDaemon
+from aiana.watcher import TranscriptWatcher
 
 console = Console()
 
@@ -363,8 +360,8 @@ def status():
 
     # Qdrant stats
     try:
-        from aiana.storage.qdrant import QdrantStorage
         from aiana.embeddings import get_embedder
+        from aiana.storage.qdrant import QdrantStorage
         embedder = get_embedder()
         qdrant = QdrantStorage(embedder=embedder)
         qdrant_stats = qdrant.get_stats()
@@ -497,11 +494,12 @@ def config(show: bool, reset: bool):
 def mcp(port: int):
     """Start Aiana as an MCP server."""
     try:
-        from aiana.mcp.server import AianaMCPServer
         import asyncio
 
+        from aiana.mcp.server import AianaMCPServer
+
         console.print("[bold]Starting Aiana MCP Server...[/bold]")
-        console.print(f"[dim]Exposing memory tools via MCP protocol[/dim]")
+        console.print("[dim]Exposing memory tools via MCP protocol[/dim]")
 
         server = AianaMCPServer()
         asyncio.run(server.run())
@@ -531,8 +529,8 @@ def memory():
 def memory_search(query: str, project: Optional[str], limit: int):
     """Search memories semantically."""
     try:
-        from aiana.storage.qdrant import QdrantStorage
         from aiana.embeddings import get_embedder
+        from aiana.storage.qdrant import QdrantStorage
 
         embedder = get_embedder()
         storage = QdrantStorage(embedder=embedder)
@@ -581,8 +579,8 @@ def memory_search(query: str, project: Optional[str], limit: int):
 def memory_add(content: str, memory_type: str, project: Optional[str]):
     """Add a memory manually."""
     try:
-        from aiana.storage.qdrant import QdrantStorage
         from aiana.embeddings import get_embedder
+        from aiana.storage.qdrant import QdrantStorage
 
         embedder = get_embedder()
         storage = QdrantStorage(embedder=embedder)
@@ -594,7 +592,7 @@ def memory_add(content: str, memory_type: str, project: Optional[str]):
             memory_type=memory_type,
         )
 
-        console.print(f"[green]Memory saved![/green]")
+        console.print("[green]Memory saved![/green]")
         console.print(f"ID: {memory_id}")
         console.print(f"Type: {memory_type}")
         if project:
@@ -612,9 +610,9 @@ def memory_recall(project: str, max_items: int):
     """Recall context for a project."""
     try:
         from aiana.context import ContextInjector
-        from aiana.storage.redis import RedisCache
-        from aiana.storage.qdrant import QdrantStorage
         from aiana.embeddings import get_embedder
+        from aiana.storage.qdrant import QdrantStorage
+        from aiana.storage.redis import RedisCache
 
         embedder = get_embedder()
         qdrant = QdrantStorage(embedder=embedder)

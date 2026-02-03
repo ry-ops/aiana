@@ -2,14 +2,12 @@
 
 import asyncio
 import json
-import os
-from datetime import datetime
-from typing import Any, Optional
+from typing import Optional
 
 try:
     from mcp.server import Server
     from mcp.server.stdio import stdio_server
-    from mcp.types import Tool, TextContent
+    from mcp.types import TextContent, Tool
     MCP_AVAILABLE = True
 except ImportError:
     MCP_AVAILABLE = False
@@ -51,8 +49,8 @@ class AianaMCPServer:
             pass
 
         try:
-            from aiana.storage.qdrant import QdrantStorage
             from aiana.embeddings import get_embedder
+            from aiana.storage.qdrant import QdrantStorage
             self.embedder = get_embedder()
             self.qdrant = QdrantStorage(embedder=self.embedder)
         except Exception:
@@ -567,7 +565,7 @@ class AianaMCPServer:
             "feedback_id": feedback_id,
             "memory_id": memory_id,
             "rating": rating_label,
-            "message": f"Thank you! Feedback recorded. This helps improve future memory retrieval.",
+            "message": "Thank you! Feedback recorded. This helps improve future memory retrieval.",
         }
 
     async def _feedback_summary(self) -> dict:

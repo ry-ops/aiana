@@ -7,7 +7,7 @@ import time
 from pathlib import Path
 from typing import Callable, Optional
 
-from watchdog.events import FileSystemEventHandler, FileModifiedEvent
+from watchdog.events import FileModifiedEvent, FileSystemEventHandler
 from watchdog.observers import Observer
 
 from aiana.config import get_claude_projects_dir, load_config
