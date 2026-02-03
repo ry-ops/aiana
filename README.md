@@ -5,8 +5,15 @@
 Aiana transforms Claude Code from stateless sessions into a compound learning system. It captures conversations, embeds them as vectors, and injects relevant context at session start—so your AI assistant remembers YOUR patterns.
 
 <p align="center">
-  <img src="./assets/aiana-flow.svg" alt="Aiana Data Flow" width="100%">
+  <img src="./assets/aiana-flow.svg" alt="Aiana Data Flow v1.0.0.3" width="100%">
 </p>
+
+<details>
+<summary>📜 Architecture Evolution (v1.0.0.2)</summary>
+<p align="center">
+  <img src="./assets/aiana-flow-v1.svg" alt="Aiana Data Flow v1.0.0.2" width="100%">
+</p>
+</details>
 
 ## The Vision
 
