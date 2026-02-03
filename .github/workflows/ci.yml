@@ -39,7 +39,11 @@ jobs:
 
       - name: Run tests
         run: |
-          pytest tests/ -v --tb=short || echo "No tests yet"
+          if find tests -name 'test_*.py' -o -name '*_test.py' 2>/dev/null | grep -q .; then
+            pytest tests/ -v --tb=short
+          else
+            echo "No test files found - skipping"
+          fi
 
   security:
     runs-on: ubuntu-latest
@@ -60,4 +64,4 @@ jobs:
 
       - name: Security scan with bandit
         run: |
-          bandit -r src/aiana -ll || true
+          bandit -r src/aiana --severity-level medium
