@@ -92,6 +92,7 @@ flowchart TB
 - **MCP server mode** - Expose memory tools directly to Claude
 - **Hook-based capture** - Official Claude Code hooks API
 - **File watcher** - Docker-compatible monitoring mode
+- **Auto-bootstrap** - One-and-done preference loading on first install
 
 ### Privacy
 - **100% local** - All data stays on your machine
@@ -128,12 +129,14 @@ pip install -e ".[all]"
 # Or minimal install
 pip install -e .
 
-# Install Claude Code hooks
+# Install Claude Code hooks (auto-loads development preferences)
 aiana install
 
 # Start monitoring
 aiana start
 ```
+
+> **One-and-Done**: The `aiana install` command automatically bootstraps your development preferences into memory. No manual configuration needed - your standards are immediately active across all projects.
 
 ---
 
@@ -176,6 +179,16 @@ aiana prefer "Uses conventional commits"
 
 # Add temporary/recent context
 aiana prefer "Working on Aiana docs" --temporary
+```
+
+### Bootstrap
+
+```bash
+# Force reload development preferences
+aiana bootstrap --force
+
+# Reset bootstrap marker (allows re-bootstrap on next install)
+aiana bootstrap --reset
 ```
 
 ### MCP Server
@@ -416,6 +429,12 @@ Aiana is designed with privacy as a core principle:
   - [x] Memory deduplication
   - [x] Conversation-based memory
 
+- [x] **Phase 2.6: Auto-Bootstrap (v1.2.0)**
+  - [x] Bundled development preferences
+  - [x] Automatic preference loading on first install
+  - [x] Cross-project memory (user-level, not project-isolated)
+  - [x] One-and-done installation experience
+
 - [ ] **Phase 3: Intelligence**
   - [ ] Automatic pattern extraction
   - [ ] Session summaries
@@ -455,15 +474,22 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 **Blog Post:** [Personal AI Operations Memory](https://ry-ops.dev/posts/2026-02-01-personal-ai-operations-memory)
 
-**Status:** Phase 2.5 Complete - Mem0 Integration Ready
+**Status:** Phase 2.6 Complete - Auto-Bootstrap Ready
 
-**Version:** [v1.1.0](https://github.com/ry-ops/aiana/releases/tag/v1.1.0)
+**Version:** [v1.2.0](https://github.com/ry-ops/aiana/releases/tag/v1.2.0)
 
 **Updated:** 2026-02-04
 
 ---
 
 ## Changelog
+
+### v1.2.0 (2026-02-04)
+- **Auto-Bootstrap**: Automatically load development preferences on first `aiana install`
+- Added `aiana bootstrap` command for manual preference management
+- Bundled `bootstrap/user-preferences.md` with development standards
+- Cross-project memory by default (user-level, not project-isolated)
+- One-and-done installation experience
 
 ### v1.1.0 (2026-02-04)
 - Added Mem0 integration for enhanced AI memory management

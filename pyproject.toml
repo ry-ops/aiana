@@ -1,6 +1,6 @@
 [project]
 name = "aiana"
-version = "1.1.0"
+version = "1.2.0"
 description = "AI conversation attendant for Claude Code - monitors and records conversations in real-time"
 readme = "README.md"
 requires-python = ">=3.10"
