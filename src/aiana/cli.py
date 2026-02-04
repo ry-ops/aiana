@@ -452,7 +452,8 @@ def hook_post_tool():
 
 @main.command()
 @click.option("--force", is_flag=True, help="Force reinstall hooks")
-def install(force: bool):
+@click.option("--skip-bootstrap", is_flag=True, help="Skip auto-bootstrap of preferences")
+def install(force: bool, skip_bootstrap: bool):
     """Install Aiana hooks into Claude Code."""
     console.print("[bold]Installing Aiana hooks...[/bold]")
 
@@ -461,6 +462,25 @@ def install(force: bool):
         console.print("\nRestart Claude Code for hooks to take effect.")
     else:
         console.print("[yellow]Hooks already installed. Use --force to reinstall.[/yellow]")
+
+    # Auto-bootstrap preferences on first install
+    if not skip_bootstrap:
+        from aiana.bootstrap import auto_bootstrap, is_bootstrapped
+
+        if not is_bootstrapped():
+            console.print("\n[bold]Loading development preferences...[/bold]")
+            result = auto_bootstrap()
+
+            if result["status"] == "success":
+                console.print(f"[green]Loaded {result['count']} preferences via {result['backend']}[/green]")
+                for section in result.get("sections", []):
+                    console.print(f"  - {section}")
+            elif result["status"] == "no_bootstrap_file":
+                console.print("[dim]No bootstrap preferences found.[/dim]")
+            elif result["status"] == "error":
+                console.print(f"[yellow]Bootstrap skipped: {result.get('error', 'unknown')}[/yellow]")
+        else:
+            console.print("[dim]Preferences already loaded.[/dim]")
 
 
 @main.command()
@@ -472,6 +492,43 @@ def uninstall():
         console.print("[green]Hooks removed successfully![/green]")
     else:
         console.print("[yellow]No Aiana hooks found.[/yellow]")
+
+
+@main.command()
+@click.option("--force", is_flag=True, help="Force reload even if already bootstrapped")
+@click.option("--reset", is_flag=True, help="Reset bootstrap marker only (doesn't delete memories)")
+def bootstrap(force: bool, reset: bool):
+    """Load development preferences into memory.
+
+    Automatically runs on first `aiana install`. Use this command to:
+    - Reload preferences after updating bootstrap/user-preferences.md
+    - Reset the bootstrap marker to allow re-bootstrap
+    """
+    from aiana.bootstrap import auto_bootstrap, is_bootstrapped, reset_bootstrap
+
+    if reset:
+        reset_bootstrap()
+        console.print("[green]Bootstrap marker reset. Run `aiana bootstrap` to reload.[/green]")
+        return
+
+    if is_bootstrapped() and not force:
+        console.print("[yellow]Already bootstrapped. Use --force to reload.[/yellow]")
+        return
+
+    console.print("[bold]Loading development preferences...[/bold]")
+    result = auto_bootstrap(force=force)
+
+    if result["status"] == "success":
+        console.print(f"[green]Loaded {result['count']} preferences via {result['backend']}[/green]")
+        console.print("\nSections loaded:")
+        for section in result.get("sections", []):
+            console.print(f"  [cyan]- {section}[/cyan]")
+    elif result["status"] == "already_bootstrapped":
+        console.print("[yellow]Already bootstrapped. Use --force to reload.[/yellow]")
+    elif result["status"] == "no_bootstrap_file":
+        console.print("[red]No bootstrap file found at bootstrap/user-preferences.md[/red]")
+    elif result["status"] == "error":
+        console.print(f"[red]Error: {result.get('error', 'unknown')}[/red]")
 
 
 # ============================================================================
