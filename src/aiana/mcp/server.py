@@ -31,6 +31,7 @@ class AianaMCPServer:
         self.sqlite = None
         self.redis = None
         self.qdrant = None
+        self.mem0 = None  # Mem0 storage (primary)
         self.embedder = None
         self.injector = None
 
@@ -48,19 +49,29 @@ class AianaMCPServer:
         except Exception:
             pass
 
+        # Try Mem0 first (primary vector store)
         try:
-            from aiana.embeddings import get_embedder
-            from aiana.storage.qdrant import QdrantStorage
-            self.embedder = get_embedder()
-            self.qdrant = QdrantStorage(embedder=self.embedder)
+            from aiana.storage.mem0 import Mem0Storage
+            self.mem0 = Mem0Storage()
         except Exception:
             pass
+
+        # Fall back to direct Qdrant if Mem0 unavailable
+        if self.mem0 is None:
+            try:
+                from aiana.embeddings import get_embedder
+                from aiana.storage.qdrant import QdrantStorage
+                self.embedder = get_embedder()
+                self.qdrant = QdrantStorage(embedder=self.embedder)
+            except Exception:
+                pass
 
         try:
             from aiana.context import ContextInjector
             self.injector = ContextInjector(
                 redis_cache=self.redis,
                 qdrant_storage=self.qdrant,
+                mem0_storage=self.mem0,
                 sqlite_storage=self.sqlite,
             )
         except Exception:
@@ -314,17 +325,40 @@ class AianaMCPServer:
         """Search memories semantically."""
         results = []
 
-        # Try Qdrant first (semantic search)
-        if self.qdrant:
+        # Try Mem0 first (primary semantic search with enhanced memory)
+        if self.mem0:
             try:
-                qdrant_results = self.qdrant.search(
+                mem0_results = self.mem0.search(
                     query=query,
                     project=project,
                     limit=limit,
                 )
                 results.extend([
                     {
+                        "source": "mem0",
+                        "id": r.get("id", ""),
+                        "score": r.get("score", 1.0),
+                        "content": r["content"],
+                        "project": r.get("project"),
+                        "timestamp": r.get("timestamp"),
+                    }
+                    for r in mem0_results
+                ])
+            except Exception:
+                pass
+
+        # Fall back to direct Qdrant if Mem0 unavailable or returned few results
+        if self.qdrant and len(results) < limit:
+            try:
+                qdrant_results = self.qdrant.search(
+                    query=query,
+                    project=project,
+                    limit=limit - len(results),
+                )
+                results.extend([
+                    {
                         "source": "semantic",
+                        "id": r.get("id", ""),
                         "score": r["score"],
                         "content": r["content"],
                         "project": r.get("project"),
@@ -370,14 +404,30 @@ class AianaMCPServer:
     ) -> dict:
         """Add a memory."""
         memory_id = None
+        backend = None
 
-        if self.qdrant:
+        # Try Mem0 first (with automatic memory extraction and deduplication)
+        if self.mem0:
+            try:
+                memory_id = self.mem0.add_memory(
+                    content=content,
+                    session_id="manual",
+                    project=project,
+                    memory_type=memory_type,
+                )
+                backend = "mem0"
+            except Exception:
+                pass
+
+        # Fall back to direct Qdrant
+        if memory_id is None and self.qdrant:
             memory_id = self.qdrant.add_memory(
                 content=content,
                 session_id="manual",
                 project=project,
                 memory_type=memory_type,
             )
+            backend = "qdrant"
 
         return {
             "status": "saved",
@@ -385,6 +435,7 @@ class AianaMCPServer:
             "content": content[:100] + "..." if len(content) > 100 else content,
             "type": memory_type,
             "project": project,
+            "backend": backend,
         }
 
     async def _memory_recall(
@@ -523,17 +574,32 @@ class AianaMCPServer:
         else:
             status["backends"]["redis"] = {"status": "not configured"}
 
-        # Qdrant status
+        # Mem0 status (primary vector store)
+        if self.mem0:
+            try:
+                stats = self.mem0.get_stats()
+                status["backends"]["mem0"] = {
+                    "status": "connected",
+                    "primary": True,
+                    **stats,
+                }
+            except Exception as e:
+                status["backends"]["mem0"] = {"status": "error", "error": str(e)}
+        else:
+            status["backends"]["mem0"] = {"status": "not configured"}
+
+        # Qdrant status (fallback or direct)
         if self.qdrant:
             try:
                 stats = self.qdrant.get_stats()
                 status["backends"]["qdrant"] = {
                     "status": "connected",
+                    "primary": self.mem0 is None,  # Primary only if Mem0 not available
                     **stats,
                 }
             except Exception as e:
                 status["backends"]["qdrant"] = {"status": "error", "error": str(e)}
-        else:
+        elif self.mem0 is None:
             status["backends"]["qdrant"] = {"status": "not configured"}
 
         return status

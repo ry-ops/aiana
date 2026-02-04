@@ -358,24 +358,45 @@ def status():
             title="Redis Cache",
         ))
 
-    # Qdrant stats
+    # Mem0 stats (primary)
+    mem0_available = False
     try:
-        from aiana.embeddings import get_embedder
-        from aiana.storage.qdrant import QdrantStorage
-        embedder = get_embedder()
-        qdrant = QdrantStorage(embedder=embedder)
-        qdrant_stats = qdrant.get_stats()
+        from aiana.storage.mem0 import Mem0Storage
+        mem0 = Mem0Storage()
+        mem0_stats = mem0.get_stats()
+        mem0_available = True
         console.print(Panel(
-            f"[bold]Status[/bold]: [green]{qdrant_stats.get('status', 'unknown')}[/green]\n"
-            f"[bold]Total Memories[/bold]: {qdrant_stats.get('total_memories', 0)}\n"
-            f"[bold]Indexed Vectors[/bold]: {qdrant_stats.get('indexed_vectors', 0)}",
-            title="Qdrant Vector Store",
+            f"[bold]Status[/bold]: [green]connected[/green]\n"
+            f"[bold]Total Memories[/bold]: {mem0_stats.get('total_memories', 0)}\n"
+            f"[bold]Backend[/bold]: {mem0_stats.get('backend', 'mem0')}\n"
+            f"[bold]Collection[/bold]: {mem0_stats.get('collection', 'N/A')}",
+            title="Mem0 Memory Store (Primary)",
         ))
     except Exception:
         console.print(Panel(
             "[dim]Not configured or not running[/dim]",
-            title="Qdrant Vector Store",
+            title="Mem0 Memory Store",
         ))
+
+    # Qdrant stats (fallback)
+    if not mem0_available:
+        try:
+            from aiana.embeddings import get_embedder
+            from aiana.storage.qdrant import QdrantStorage
+            embedder = get_embedder()
+            qdrant = QdrantStorage(embedder=embedder)
+            qdrant_stats = qdrant.get_stats()
+            console.print(Panel(
+                f"[bold]Status[/bold]: [green]{qdrant_stats.get('status', 'unknown')}[/green]\n"
+                f"[bold]Total Memories[/bold]: {qdrant_stats.get('total_memories', 0)}\n"
+                f"[bold]Indexed Vectors[/bold]: {qdrant_stats.get('indexed_vectors', 0)}",
+                title="Qdrant Vector Store (Fallback)",
+            ))
+        except Exception:
+            console.print(Panel(
+                "[dim]Not configured or not running[/dim]",
+                title="Qdrant Vector Store",
+            ))
 
     # Configuration
     console.print(Panel(
@@ -528,36 +549,33 @@ def memory():
 @click.option("-l", "--limit", default=10, help="Maximum results")
 def memory_search(query: str, project: Optional[str], limit: int):
     """Search memories semantically."""
+    results = []
+    backend = None
+
+    # Try Mem0 first (primary)
     try:
-        from aiana.embeddings import get_embedder
-        from aiana.storage.qdrant import QdrantStorage
-
-        embedder = get_embedder()
-        storage = QdrantStorage(embedder=embedder)
-
+        from aiana.storage.mem0 import Mem0Storage
+        storage = Mem0Storage()
         results = storage.search(query=query, project=project, limit=limit)
+        backend = "mem0"
+    except Exception:
+        pass
 
-        if not results:
-            console.print(f"[dim]No results for: {query}[/dim]")
-            return
+    # Fallback to Qdrant
+    if not results:
+        try:
+            from aiana.embeddings import get_embedder
+            from aiana.storage.qdrant import QdrantStorage
+            embedder = get_embedder()
+            storage = QdrantStorage(embedder=embedder)
+            results = storage.search(query=query, project=project, limit=limit)
+            backend = "qdrant"
+        except Exception:
+            pass
 
-        console.print(f"[bold]Found {len(results)} results for:[/bold] {query}\n")
-
-        for r in results:
-            score = int(r["score"] * 100)
-            content = r["content"][:200]
-            console.print(f"[cyan]{score}% match[/cyan]")
-            console.print(f"  {content}...")
-            if r.get("project"):
-                console.print(f"  [dim]Project: {r['project']}[/dim]")
-            console.print()
-
-    except ImportError:
-        console.print("[red]Vector search not available.[/red]")
-        console.print("Install with: pip install aiana[vector]")
-
-        # Fallback to SQLite FTS
-        console.print("\n[dim]Falling back to full-text search...[/dim]\n")
+    # Fallback to SQLite FTS
+    if not results:
+        console.print("[dim]Falling back to full-text search...[/dim]\n")
         storage = AianaStorage()
         messages = storage.search(query, project=project, limit=limit)
 
@@ -569,6 +587,23 @@ def memory_search(query: str, project: Optional[str], limit: int):
             console.print(f"[cyan]{m.type.value}[/cyan] ({m.session_id[:8]})")
             console.print(f"  {m.content[:200]}...")
             console.print()
+        return
+
+    if not results:
+        console.print(f"[dim]No results for: {query}[/dim]")
+        return
+
+    console.print(f"[bold]Found {len(results)} results for:[/bold] {query}")
+    console.print(f"[dim]Backend: {backend}[/dim]\n")
+
+    for r in results:
+        score = int(r.get("score", 1.0) * 100)
+        content = r["content"][:200]
+        console.print(f"[cyan]{score}% match[/cyan]")
+        console.print(f"  {content}...")
+        if r.get("project"):
+            console.print(f"  [dim]Project: {r['project']}[/dim]")
+        console.print()
 
 
 @memory.command("add")
@@ -578,28 +613,49 @@ def memory_search(query: str, project: Optional[str], limit: int):
 @click.option("-p", "--project", help="Associated project")
 def memory_add(content: str, memory_type: str, project: Optional[str]):
     """Add a memory manually."""
+    memory_id = None
+    backend = None
+
+    # Try Mem0 first (primary, with automatic extraction)
     try:
-        from aiana.embeddings import get_embedder
-        from aiana.storage.qdrant import QdrantStorage
-
-        embedder = get_embedder()
-        storage = QdrantStorage(embedder=embedder)
-
+        from aiana.storage.mem0 import Mem0Storage
+        storage = Mem0Storage()
         memory_id = storage.add_memory(
             content=content,
             session_id="manual",
             project=project,
             memory_type=memory_type,
         )
+        backend = "mem0"
+    except Exception:
+        pass
 
+    # Fallback to Qdrant
+    if not memory_id:
+        try:
+            from aiana.embeddings import get_embedder
+            from aiana.storage.qdrant import QdrantStorage
+            embedder = get_embedder()
+            storage = QdrantStorage(embedder=embedder)
+            memory_id = storage.add_memory(
+                content=content,
+                session_id="manual",
+                project=project,
+                memory_type=memory_type,
+            )
+            backend = "qdrant"
+        except Exception:
+            pass
+
+    if memory_id:
         console.print("[green]Memory saved![/green]")
         console.print(f"ID: {memory_id}")
         console.print(f"Type: {memory_type}")
+        console.print(f"Backend: {backend}")
         if project:
             console.print(f"Project: {project}")
-
-    except ImportError:
-        console.print("[red]Vector storage not available.[/red]")
+    else:
+        console.print("[red]Failed to save memory. Vector storage not available.[/red]")
         console.print("Install with: pip install aiana[vector]")
 
 
@@ -610,18 +666,40 @@ def memory_recall(project: str, max_items: int):
     """Recall context for a project."""
     try:
         from aiana.context import ContextInjector
-        from aiana.embeddings import get_embedder
-        from aiana.storage.qdrant import QdrantStorage
         from aiana.storage.redis import RedisCache
 
-        embedder = get_embedder()
-        qdrant = QdrantStorage(embedder=embedder)
-        redis = RedisCache()
+        # Initialize backends
+        redis = None
+        qdrant = None
+        mem0 = None
         sqlite = AianaStorage()
+
+        try:
+            redis = RedisCache()
+        except Exception:
+            pass
+
+        # Try Mem0 first (primary)
+        try:
+            from aiana.storage.mem0 import Mem0Storage
+            mem0 = Mem0Storage()
+        except Exception:
+            pass
+
+        # Fallback to Qdrant
+        if not mem0:
+            try:
+                from aiana.embeddings import get_embedder
+                from aiana.storage.qdrant import QdrantStorage
+                embedder = get_embedder()
+                qdrant = QdrantStorage(embedder=embedder)
+            except Exception:
+                pass
 
         injector = ContextInjector(
             redis_cache=redis,
             qdrant_storage=qdrant,
+            mem0_storage=mem0,
             sqlite_storage=sqlite,
         )
 

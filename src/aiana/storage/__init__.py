@@ -13,4 +13,9 @@ try:
 except ImportError:
     QdrantStorage = None
 
-__all__ = ["AianaStorage", "RedisCache", "QdrantStorage"]
+try:
+    from aiana.storage.mem0 import Mem0Storage
+except ImportError:
+    Mem0Storage = None
+
+__all__ = ["AianaStorage", "RedisCache", "QdrantStorage", "Mem0Storage"]

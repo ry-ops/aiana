@@ -10,6 +10,7 @@ from aiana.config import load_config
 
 if TYPE_CHECKING:
     from aiana.storage import AianaStorage
+    from aiana.storage.mem0 import Mem0Storage
     from aiana.storage.qdrant import QdrantStorage
     from aiana.storage.redis import RedisCache
 
@@ -21,17 +22,20 @@ class ContextInjector:
         self,
         redis_cache: Optional["RedisCache"] = None,
         qdrant_storage: Optional["QdrantStorage"] = None,
+        mem0_storage: Optional["Mem0Storage"] = None,
         sqlite_storage: Optional["AianaStorage"] = None,
     ):
         """Initialize the context injector.
 
         Args:
             redis_cache: Optional Redis cache for fast lookups.
-            qdrant_storage: Optional Qdrant for semantic search.
+            qdrant_storage: Optional Qdrant for semantic search (fallback).
+            mem0_storage: Optional Mem0 for enhanced memory (primary).
             sqlite_storage: SQLite storage for full-text search.
         """
         self.redis = redis_cache
         self.qdrant = qdrant_storage
+        self.mem0 = mem0_storage
         self.sqlite = sqlite_storage
         self.config = load_config()
 
@@ -147,8 +151,21 @@ class ContextInjector:
         lines = [f"## Project: {project}"]
         found_items = False
 
-        # From Qdrant (semantic)
-        if self.qdrant:
+        # From Mem0 first (primary, enhanced memory)
+        if self.mem0:
+            try:
+                memories = self.mem0.get_recent(limit=max_items, project=project)
+                if memories:
+                    found_items = True
+                    lines.append("\n### Recent Activity (Mem0)")
+                    for mem in memories[:5]:
+                        content = mem.get("content", "")[:150]
+                        lines.append(f"- {content}")
+            except Exception:
+                pass
+
+        # From Qdrant (fallback semantic)
+        if self.qdrant and not found_items:
             try:
                 memories = self.qdrant.get_recent(limit=max_items, project=project)
                 if memories:
@@ -281,8 +298,16 @@ Memories will be saved as you work.
             project: Project name.
             summary: Session summary text.
         """
-        # Add to Qdrant for semantic retrieval
-        if self.qdrant:
+        # Add to Mem0 first (primary, with automatic extraction)
+        if self.mem0:
+            self.mem0.add_memory(
+                content=summary,
+                session_id=session_id,
+                project=project,
+                memory_type="session_summary",
+            )
+        # Fallback to Qdrant for semantic retrieval
+        elif self.qdrant:
             self.qdrant.add_memory(
                 content=summary,
                 session_id=session_id,

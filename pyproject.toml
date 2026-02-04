@@ -1,6 +1,6 @@
 [project]
 name = "aiana"
-version = "1.0.0.3"
+version = "1.1.0"
 description = "AI conversation attendant for Claude Code - monitors and records conversations in real-time"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -41,6 +41,7 @@ dependencies = [
     "qdrant-client>=1.7.0",
     "sentence-transformers>=2.2.0",
     "mcp>=1.0.0",
+    "mem0ai>=1.0.3,<2.0",  # Pinned: wrapper pattern isolates breaking changes
 ]
 
 [project.urls]
@@ -70,6 +71,7 @@ encryption = [
 vector = [
     "qdrant-client>=1.7.0",
     "sentence-transformers>=2.2.0",
+    "mem0ai>=1.0.3,<2.0",
 ]
 mcp = [
     "mcp>=1.0.0",

@@ -1,0 +1,227 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 600">
+  <defs>
+    <!-- Gradients -->
+    <linearGradient id="claudeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#D97706"/>
+      <stop offset="100%" style="stop-color:#B45309"/>
+    </linearGradient>
+    <linearGradient id="aianaGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#7C3AED"/>
+      <stop offset="100%" style="stop-color:#5B21B6"/>
+    </linearGradient>
+    <linearGradient id="mem0Grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#EC4899"/>
+      <stop offset="100%" style="stop-color:#BE185D"/>
+    </linearGradient>
+    <linearGradient id="qdrantGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#059669"/>
+      <stop offset="100%" style="stop-color:#047857"/>
+    </linearGradient>
+    <linearGradient id="redisGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#DC2626"/>
+      <stop offset="100%" style="stop-color:#B91C1C"/>
+    </linearGradient>
+    <linearGradient id="sqliteGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0EA5E9"/>
+      <stop offset="100%" style="stop-color:#0284C7"/>
+    </linearGradient>
+
+    <!-- Glow filter -->
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- Animated data particle -->
+    <circle id="dataParticle" r="4" fill="#fff" filter="url(#glow)"/>
+  </defs>
+
+  <!-- Background -->
+  <rect width="900" height="600" fill="#0f172a"/>
+
+  <!-- Title -->
+  <text x="450" y="40" text-anchor="middle" fill="#fff" font-family="system-ui, sans-serif" font-size="24" font-weight="bold">
+    AIANA - AI Memory Architecture
+  </text>
+  <text x="450" y="65" text-anchor="middle" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="14">
+    Personal AI Operations Memory for Claude Code
+  </text>
+
+  <!-- Claude Code Box -->
+  <g transform="translate(50, 100)">
+    <rect width="200" height="120" rx="12" fill="url(#claudeGrad)" opacity="0.9"/>
+    <text x="100" y="30" text-anchor="middle" fill="#fff" font-family="system-ui, sans-serif" font-size="16" font-weight="bold">Claude Code</text>
+    <text x="100" y="55" text-anchor="middle" fill="#fef3c7" font-family="system-ui, sans-serif" font-size="12">Sessions</text>
+    <text x="100" y="75" text-anchor="middle" fill="#fef3c7" font-family="system-ui, sans-serif" font-size="12">Conversations</text>
+    <text x="100" y="95" text-anchor="middle" fill="#fef3c7" font-family="system-ui, sans-serif" font-size="12">Tool Calls</text>
+
+    <!-- Animated pulse -->
+    <circle cx="100" cy="60" r="45" fill="none" stroke="#fff" stroke-width="2" opacity="0.3">
+      <animate attributeName="r" values="45;55;45" dur="2s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.3;0.1;0.3" dur="2s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+
+  <!-- AIANA Core Box -->
+  <g transform="translate(350, 90)">
+    <rect width="200" height="180" rx="12" fill="url(#aianaGrad)" opacity="0.9"/>
+    <text x="100" y="30" text-anchor="middle" fill="#fff" font-family="system-ui, sans-serif" font-size="16" font-weight="bold">AIANA Core</text>
+
+    <!-- Components -->
+    <rect x="20" y="50" width="160" height="30" rx="6" fill="rgba(255,255,255,0.15)"/>
+    <text x="100" y="70" text-anchor="middle" fill="#fff" font-family="system-ui, sans-serif" font-size="11">Session Capture (Hooks)</text>
+
+    <rect x="20" y="90" width="160" height="30" rx="6" fill="rgba(255,255,255,0.15)"/>
+    <text x="100" y="110" text-anchor="middle" fill="#fff" font-family="system-ui, sans-serif" font-size="11">Embedding Engine</text>
+
+    <rect x="20" y="130" width="160" height="30" rx="6" fill="rgba(255,255,255,0.15)"/>
+    <text x="100" y="150" text-anchor="middle" fill="#fff" font-family="system-ui, sans-serif" font-size="11">Context Injector</text>
+  </g>
+
+  <!-- MCP Server Box -->
+  <g transform="translate(350, 290)">
+    <rect width="200" height="60" rx="12" fill="url(#aianaGrad)" opacity="0.7"/>
+    <text x="100" y="25" text-anchor="middle" fill="#fff" font-family="system-ui, sans-serif" font-size="14" font-weight="bold">MCP Server</text>
+    <text x="100" y="45" text-anchor="middle" fill="#e9d5ff" font-family="system-ui, sans-serif" font-size="10">9 Memory Tools</text>
+  </g>
+
+  <!-- Storage Backends -->
+  <!-- SQLite -->
+  <g transform="translate(620, 100)">
+    <rect width="130" height="80" rx="10" fill="url(#sqliteGrad)" opacity="0.9"/>
+    <text x="65" y="30" text-anchor="middle" fill="#fff" font-family="system-ui, sans-serif" font-size="14" font-weight="bold">SQLite</text>
+    <text x="65" y="50" text-anchor="middle" fill="#e0f2fe" font-family="system-ui, sans-serif" font-size="10">FTS5 Full-Text</text>
+    <text x="65" y="65" text-anchor="middle" fill="#e0f2fe" font-family="system-ui, sans-serif" font-size="10">Sessions & Messages</text>
+  </g>
+
+  <!-- Redis -->
+  <g transform="translate(770, 100)">
+    <rect width="110" height="80" rx="10" fill="url(#redisGrad)" opacity="0.9"/>
+    <text x="55" y="30" text-anchor="middle" fill="#fff" font-family="system-ui, sans-serif" font-size="14" font-weight="bold">Redis</text>
+    <text x="55" y="50" text-anchor="middle" fill="#fee2e2" font-family="system-ui, sans-serif" font-size="10">Session Cache</text>
+    <text x="55" y="65" text-anchor="middle" fill="#fee2e2" font-family="system-ui, sans-serif" font-size="10">Preferences</text>
+  </g>
+
+  <!-- Mem0 -->
+  <g transform="translate(620, 210)">
+    <rect width="130" height="100" rx="10" fill="url(#mem0Grad)" opacity="0.9"/>
+    <text x="65" y="25" text-anchor="middle" fill="#fff" font-family="system-ui, sans-serif" font-size="14" font-weight="bold">Mem0</text>
+    <text x="65" y="45" text-anchor="middle" fill="#fce7f3" font-family="system-ui, sans-serif" font-size="10">AI Memory</text>
+    <text x="65" y="60" text-anchor="middle" fill="#fce7f3" font-family="system-ui, sans-serif" font-size="10">Auto Extraction</text>
+    <text x="65" y="75" text-anchor="middle" fill="#fce7f3" font-family="system-ui, sans-serif" font-size="10">Deduplication</text>
+
+    <!-- Primary badge -->
+    <rect x="75" y="82" width="50" height="14" rx="7" fill="#fff"/>
+    <text x="100" y="92" text-anchor="middle" fill="#EC4899" font-family="system-ui, sans-serif" font-size="8" font-weight="bold">PRIMARY</text>
+  </g>
+
+  <!-- Qdrant -->
+  <g transform="translate(770, 210)">
+    <rect width="110" height="100" rx="10" fill="url(#qdrantGrad)" opacity="0.9"/>
+    <text x="55" y="25" text-anchor="middle" fill="#fff" font-family="system-ui, sans-serif" font-size="14" font-weight="bold">Qdrant</text>
+    <text x="55" y="45" text-anchor="middle" fill="#d1fae5" font-family="system-ui, sans-serif" font-size="10">Vector Store</text>
+    <text x="55" y="60" text-anchor="middle" fill="#d1fae5" font-family="system-ui, sans-serif" font-size="10">384-dim vectors</text>
+    <text x="55" y="75" text-anchor="middle" fill="#d1fae5" font-family="system-ui, sans-serif" font-size="10">Cosine Search</text>
+  </g>
+
+  <!-- Connection Lines with Animations -->
+  <!-- Claude to AIANA (capture) -->
+  <path d="M250,160 L350,160" stroke="#D97706" stroke-width="3" fill="none" stroke-dasharray="5,5">
+    <animate attributeName="stroke-dashoffset" values="10;0" dur="0.5s" repeatCount="indefinite"/>
+  </path>
+  <text x="300" y="150" text-anchor="middle" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="10">hooks</text>
+
+  <!-- AIANA to Claude (inject) -->
+  <path d="M350,200 Q300,250 250,200" stroke="#7C3AED" stroke-width="3" fill="none" stroke-dasharray="5,5">
+    <animate attributeName="stroke-dashoffset" values="0;10" dur="0.5s" repeatCount="indefinite"/>
+  </path>
+  <text x="280" y="240" text-anchor="middle" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="10">context</text>
+
+  <!-- AIANA to SQLite -->
+  <path d="M550,140 L620,140" stroke="#0EA5E9" stroke-width="2" fill="none">
+    <animate attributeName="stroke-dasharray" values="0,100;100,0" dur="1.5s" repeatCount="indefinite"/>
+  </path>
+
+  <!-- AIANA to Redis -->
+  <path d="M550,130 Q600,100 770,140" stroke="#DC2626" stroke-width="2" fill="none">
+    <animate attributeName="stroke-dasharray" values="0,150;150,0" dur="1.5s" repeatCount="indefinite"/>
+  </path>
+
+  <!-- AIANA to Mem0 -->
+  <path d="M550,180 L620,240" stroke="#EC4899" stroke-width="3" fill="none">
+    <animate attributeName="stroke-dasharray" values="0,100;100,0" dur="1s" repeatCount="indefinite"/>
+  </path>
+
+  <!-- Mem0 to Qdrant -->
+  <path d="M750,260 L770,260" stroke="#059669" stroke-width="2" fill="none">
+    <animate attributeName="stroke-dasharray" values="0,30;30,0" dur="0.8s" repeatCount="indefinite"/>
+  </path>
+
+  <!-- MCP bidirectional to Claude -->
+  <path d="M350,320 Q200,350 150,220" stroke="#7C3AED" stroke-width="2" fill="none" stroke-dasharray="4,4">
+    <animate attributeName="stroke-dashoffset" values="8;0" dur="0.4s" repeatCount="indefinite"/>
+  </path>
+  <text x="220" y="300" text-anchor="middle" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="10">MCP tools</text>
+
+  <!-- Data Flow Animation - Capture Path -->
+  <circle r="5" fill="#D97706" filter="url(#glow)">
+    <animateMotion dur="2s" repeatCount="indefinite">
+      <mpath href="#capturePath"/>
+    </animateMotion>
+  </circle>
+  <path id="capturePath" d="M150,160 L450,160 L685,140" fill="none" stroke="none"/>
+
+  <!-- Data Flow Animation - Mem0 Path -->
+  <circle r="5" fill="#EC4899" filter="url(#glow)">
+    <animateMotion dur="2.5s" repeatCount="indefinite" begin="0.5s">
+      <mpath href="#mem0Path"/>
+    </animateMotion>
+  </circle>
+  <path id="mem0Path" d="M450,180 L685,260 L825,260" fill="none" stroke="none"/>
+
+  <!-- Data Flow Animation - Context Return Path -->
+  <circle r="5" fill="#7C3AED" filter="url(#glow)">
+    <animateMotion dur="3s" repeatCount="indefinite" begin="1s">
+      <mpath href="#contextPath"/>
+    </animateMotion>
+  </circle>
+  <path id="contextPath" d="M685,260 L450,200 L150,160" fill="none" stroke="none"/>
+
+  <!-- Legend -->
+  <g transform="translate(50, 400)">
+    <text x="0" y="0" fill="#fff" font-family="system-ui, sans-serif" font-size="14" font-weight="bold">Data Flow</text>
+
+    <rect x="0" y="15" width="20" height="3" fill="#D97706"/>
+    <text x="30" y="20" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">Session capture via hooks</text>
+
+    <rect x="0" y="35" width="20" height="3" fill="#EC4899"/>
+    <text x="30" y="40" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">Memory storage (Mem0 primary)</text>
+
+    <rect x="0" y="55" width="20" height="3" fill="#7C3AED"/>
+    <text x="30" y="60" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">Context injection at session start</text>
+  </g>
+
+  <!-- Key Features -->
+  <g transform="translate(350, 400)">
+    <text x="0" y="0" fill="#fff" font-family="system-ui, sans-serif" font-size="14" font-weight="bold">Key Features</text>
+    <text x="0" y="25" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">Automatic memory extraction from conversations</text>
+    <text x="0" y="45" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">Semantic search across all memories</text>
+    <text x="0" y="65" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">Context injection makes Claude remember YOU</text>
+  </g>
+
+  <!-- Version Badge -->
+  <g transform="translate(750, 400)">
+    <rect width="100" height="70" rx="8" fill="rgba(255,255,255,0.1)"/>
+    <text x="50" y="25" text-anchor="middle" fill="#fff" font-family="system-ui, sans-serif" font-size="12" font-weight="bold">v1.1.0</text>
+    <text x="50" y="45" text-anchor="middle" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="10">Mem0 Integration</text>
+    <text x="50" y="60" text-anchor="middle" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="10">2026-02-04</text>
+  </g>
+
+  <!-- Footer -->
+  <text x="450" y="570" text-anchor="middle" fill="#475569" font-family="system-ui, sans-serif" font-size="12">
+    github.com/ry-ops/aiana | 100% Local | Privacy First
+  </text>
+</svg>
