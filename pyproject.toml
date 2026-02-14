@@ -1,6 +1,6 @@
 [project]
 name = "aiana"
-version = "1.2.0"
+version = "1.2.1"
 description = "AI conversation attendant for Claude Code - monitors and records conversations in real-time"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -66,7 +66,7 @@ dev = [
     "safety>=3.0.0",
 ]
 encryption = [
-    "cryptography>=41.0.0",
+    "cryptography>=46.0.5",
 ]
 vector = [
     "qdrant-client>=1.7.0",
