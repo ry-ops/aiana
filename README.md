@@ -476,13 +476,16 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 **Status:** Phase 2.6 Complete - Auto-Bootstrap Ready
 
-**Version:** [v1.2.0](https://github.com/ry-ops/aiana/releases/tag/v1.2.0)
+**Version:** [v1.2.1](https://github.com/ry-ops/aiana/releases/tag/v1.2.1)
 
-**Updated:** 2026-02-04
+**Updated:** 2026-02-14
 
 ---
 
 ## Changelog
+
+### v1.2.1 (2026-02-14)
+- Fixed CVE-2026-26007: Bump cryptography to >=46.0.5 (subgroup attack in SECT curves)
 
 ### v1.2.0 (2026-02-04)
 - **Auto-Bootstrap**: Automatically load development preferences on first `aiana install`

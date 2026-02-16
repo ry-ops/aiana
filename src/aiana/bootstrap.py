@@ -1,6 +1,5 @@
 """Auto-bootstrap AIANA with user preferences on first run."""
 
-import os
 from pathlib import Path
 from typing import Optional
 
