@@ -40,15 +40,12 @@ def load_bootstrap_preferences() -> list[dict]:
     current_section = None
     current_content = []
 
-    for line in content.split("
-"):
+    for line in content.split("\n"):
         if line.startswith("## "):
             # Save previous section
             if current_section and current_content:
                 memories.append({
-                    "content": f"{current_section}
-" + "
-".join(current_content),
+                    "content": f"{current_section}\n" + "\n".join(current_content),
                     "memory_type": "preference",
                     "section": current_section,
                 })
@@ -63,9 +60,7 @@ def load_bootstrap_preferences() -> list[dict]:
     # Save last section
     if current_section and current_content:
         memories.append({
-            "content": f"{current_section}
-" + "
-".join(current_content),
+            "content": f"{current_section}\n" + "\n".join(current_content),
             "memory_type": "preference",
             "section": current_section,
         })
