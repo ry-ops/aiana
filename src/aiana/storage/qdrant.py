@@ -118,7 +118,7 @@ class QdrantStorage:
         limit: int = 10,
         project: Optional[str] = None,
         memory_type: Optional[str] = None,
-        min_score: float = 0.5,
+        min_score: float = 0.3,
     ) -> list[dict]:
         """Search memories semantically.
 
