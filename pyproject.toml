@@ -76,8 +76,11 @@ vector = [
 mcp = [
     "mcp>=1.0.0",
 ]
+mlx = [
+    "mlx-embeddings>=0.1.0",
+]
 all = [
-    "aiana[encryption,vector,mcp]",
+    "aiana[encryption,vector,mcp,mlx]",
 ]
 
 [build-system]
