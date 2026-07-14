@@ -118,7 +118,7 @@ class QdrantStorage:
         limit: int = 10,
         project: Optional[str] = None,
         memory_type: Optional[str] = None,
-        min_score: float = 0.5,
+        min_score: float = 0.3,
     ) -> list[dict]:
         """Search memories semantically.
 
@@ -156,13 +156,15 @@ class QdrantStorage:
 
         search_filter = Filter(must=conditions) if conditions else None
 
-        results = self.client.search(
+        # qdrant-client >= 1.12 removed Client.search() in favor of query_points().
+        results = self.client.query_points(
             collection_name=COLLECTION_NAME,
-            query_vector=query_vector,
+            query=query_vector,
             limit=limit,
             query_filter=search_filter,
             score_threshold=min_score,
-        )
+            with_payload=True,
+        ).points
 
         return [
             {
