@@ -166,12 +166,30 @@ def get_embedder(
         model_name: Model to use. If different from current, creates new.
         force_new: Force creation of new instance.
 
+    The backend is chosen by the ``AIANA_EMBEDDER_BACKEND`` environment variable:
+    ``sentence-transformers`` (default) or ``mlx`` (torch-free, Apple-silicon
+    native via mlx-embeddings; requires ``pip install 'aiana[mlx]'``).
+
     Returns:
-        Embedder instance.
+        An embedder exposing ``.embed()`` and ``.dimension``.
     """
     global _embedder
 
-    if force_new or _embedder is None:
+    backend = os.environ.get("AIANA_EMBEDDER_BACKEND", "sentence-transformers").lower()
+
+    if backend in ("mlx", "mlx-embeddings"):
+        from aiana.embeddings.mlx_embedder import MLXEmbedder
+
+        if (
+            force_new
+            or _embedder is None
+            or not isinstance(_embedder, MLXEmbedder)
+            or (model_name and _embedder.model_name != model_name)
+        ):
+            _embedder = MLXEmbedder(model_name=model_name)
+        return _embedder
+
+    if force_new or _embedder is None or not isinstance(_embedder, Embedder):
         _embedder = Embedder(model_name=model_name)
     elif model_name and _embedder.model_name != model_name:
         _embedder = Embedder(model_name=model_name)
