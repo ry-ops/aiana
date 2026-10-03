@@ -1,4 +1,3 @@
-
 <img src="https://github.com/ry-ops/aiana/blob/main/Aiana.png" width="100%">
 
 # Aiana
@@ -452,10 +451,10 @@ Aiana is designed with privacy as a core principle:
 
 **ry-ops ecosystem:**
 - [git-steer](https://github.com/ry-ops/git-steer) - GitHub autonomy engine via MCP
-- [cortex](https://github.com/ry-ops/cortex) - Multi-agent AI system
+- [cortex](https://github.com/cortex-io/cortex) - Multi-agent AI system
 
 **Community tools:**
-- [ccusage](https://github.com/ryoppippi/ccusage) - Cost/token tracking
+- [ccusage](https://github.com/ccusage/ccusage) - Cost/token tracking
 - [claude-code-log](https://github.com/daaain/claude-code-log) - JSONL to HTML converter
 
 ---
@@ -503,3 +502,8 @@ MIT License - see [LICENSE](LICENSE) file for details.
 - Updated MCP server tools for Mem0
 - Implemented wrapper pattern with pinned dependency (`>=1.0.3,<2.0`)
 - Added ADR-001: Dependency Integration Strategy
+
+<!-- org-footer -->
+---
+
+<p align="center"><sub>Part of <a href="https://github.com/ry-ops">ry-ops</a> · building the pipes between infrastructure, automation, and observability · built by <a href="https://github.com/ry-ops">ry-ops</a></sub></p>
