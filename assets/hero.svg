@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 420" width="960" height="420" role="img" aria-labelledby="t d">
+  <title id="t">Aiana: memory that carries across Claude Code sessions</title>
+  <desc id="d">In one session you discuss a project; aiana watches and stores it. Days later, in a new session, aiana recalls the past and injects it as context, so Claude Code picks up where you left off instead of starting cold.</desc>
+  <defs><linearGradient id="title" x1="0" x2="1"><stop offset="0" stop-color="#b58cff"/><stop offset=".5" stop-color="#7c6cff"/><stop offset="1" stop-color="#3ec7ff"/></linearGradient></defs>
+  <style>
+    text { font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; fill:#e6ebf5; }
+    .muted { fill:#8b96ad; } .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    @keyframes s1a { 0%,3.64% { opacity:0; transform:translateY(6px); } 6.82%,94.55% { opacity:1; transform:translateY(0); } 97.27%,100% { opacity:0 } } .s1a { animation:s1a 11.0s infinite; }
+    @keyframes s1b { 0%,10.91% { opacity:0; transform:translateY(6px); } 14.09%,94.55% { opacity:1; transform:translateY(0); } 97.27%,100% { opacity:0 } } .s1b { animation:s1b 11.0s infinite; }
+    @keyframes store { 0%,21.82% { opacity:0; transform:scale(.8); } 25.00%,94.55% { opacity:1; transform:scale(1); } 97.27%,100% { opacity:0 } } .store { animation:store 11.0s infinite; }
+    @keyframes pulse { 0%,100% { r:30; opacity:.5 } 50% { r:34; opacity:.9 } } .pulse { animation: pulse 2.6s ease-in-out infinite; }
+    @keyframes s2q { 0%,43.64% { opacity:0; transform:translateY(6px); } 46.82%,94.55% { opacity:1; transform:translateY(0); } 97.27%,100% { opacity:0 } } .s2q { animation:s2q 11.0s infinite; }
+    @keyframes inject { 0%,56.36% { opacity:0; transform:scale(.8); } 59.55%,94.55% { opacity:1; transform:scale(1); } 97.27%,100% { opacity:0 } } .inject { animation:inject 11.0s infinite; }
+    @keyframes s2a { 0%,65.45% { opacity:0; transform:translateY(6px); } 68.64%,94.55% { opacity:1; transform:translateY(0); } 97.27%,100% { opacity:0 } } .s2a { animation:s2a 11.0s infinite; }
+    @keyframes up { 0%,20.00% { offset-distance:0%; opacity:0 } 20.91% { opacity:1 } 30.00% { offset-distance:100%; opacity:1 } 31.82%,100% { opacity:0 } } .up { animation: up 11.0s infinite; offset-path: path('M250 170 C 360 170, 420 200, 480 230'); }
+    @keyframes dn { 0%,54.55% { offset-distance:0%; opacity:0 } 55.45% { opacity:1 } 64.55% { offset-distance:100%; opacity:1 } 66.36%,100% { opacity:0 } } .dn { animation: dn 11.0s infinite; offset-path: path('M480 270 C 420 300, 360 330, 250 330'); }
+    @media (prefers-reduced-motion: reduce) { * { animation:none !important; } }
+  </style>
+  <rect width="960" height="420" rx="20" fill="#0f1420"/>
+  <text x="40" y="60" font-size="42" font-weight="800" style="fill:url(#title)">Aiana</text>
+  <text x="42" y="90" font-size="16" class="muted">Claude Code starts every session cold. Aiana gives it a memory.</text>
+
+  <!-- Session 1 -->
+  <rect x="30" y="118" width="230" height="110" rx="14" fill="#161d2b" stroke="#2c3750"/>
+  <text x="46" y="140" font-size="11" font-weight="700" class="muted" letter-spacing=".08em">SESSION · MONDAY</text>
+  <g class="s1a"><rect x="46" y="150" width="150" height="24" rx="8" fill="#2a3550"/><text x="56" y="166" font-size="11">we use uv, not pip</text></g>
+  <g class="s1b"><rect x="76" y="182" width="168" height="24" rx="8" fill="#1d2536"/><text x="86" y="198" font-size="11" class="muted">noted — uv it is</text></g>
+
+  <!-- Session 2 -->
+  <rect x="30" y="278" width="230" height="110" rx="14" fill="#161d2b" stroke="#2c3750"/>
+  <text x="46" y="300" font-size="11" font-weight="700" class="muted" letter-spacing=".08em">NEW SESSION · FRIDAY</text>
+  <g class="s2q"><rect x="46" y="310" width="150" height="24" rx="8" fill="#2a3550"/><text x="56" y="326" font-size="11">add a dependency</text></g>
+  <g class="s2a"><rect x="60" y="342" width="184" height="24" rx="8" fill="#13233a"/><text x="70" y="358" font-size="11" style="fill:#a8e4ff">using uv, as you prefer…</text></g>
+
+  <!-- aiana memory core -->
+  <circle class="pulse" cx="520" cy="250" r="30" fill="#b58cff" fill-opacity=".15"/>
+  <circle cx="520" cy="250" r="30" fill="none" stroke="#b58cff" stroke-width="2"/>
+  <text x="520" y="246" text-anchor="middle" font-size="13" font-weight="800">aiana</text>
+  <text x="520" y="263" text-anchor="middle" font-size="9.5" class="muted">memory</text>
+  <circle class="up" r="5" fill="#b58cff"/>
+  <circle class="dn" r="5" fill="#3ec7ff"/>
+  <g class="store"><text x="360" y="200" font-size="11" style="fill:#c9a9ff">stores it</text></g>
+  <g class="inject"><text x="330" y="318" font-size="11" style="fill:#a8e4ff">recalls + injects</text></g>
+
+  <!-- what it keeps -->
+  <text x="630" y="150" font-size="12" font-weight="700" class="muted" letter-spacing=".08em">WHAT IT KEEPS</text>
+  <g font-size="13">
+    <text x="630" y="180">💬 every session, logged</text>
+    <text x="630" y="206">🧠 preferences &amp; decisions</text>
+    <text x="630" y="232">🔎 semantic + full-text recall</text>
+    <text x="630" y="258">🧩 injected into new sessions</text>
+  </g>
+  <text x="630" y="300" font-size="11" class="muted">SQLite · Qdrant · Redis · mem0</text>
+  <text x="630" y="318" font-size="11" class="muted">embeddings via sentence-transformers</text>
+</svg>
