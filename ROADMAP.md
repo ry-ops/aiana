@@ -106,6 +106,12 @@ A native macOS app for aiana, in the style of [AFM Studio](https://github.com/ry
 - **No cloud.** Brakes, the waker and the app stay on the Mac, like the rest of aiana.
 - **No acting on other systems.** Aiana surfaces and hands off work. The session that releases a brake does the work, with the user's usual approvals.
 
+## Bookmarked for later
+
+These ideas are parked for discussion. They are not planned yet.
+
+- **Update other projects' roadmaps.** Add a tool that lets a session update the `ROADMAP.md` of another repo or project. For example, when a brake is released or work finishes, the roadmap of the project it belongs to would be updated too. How it writes, what it may touch and who approves the change are all open.
+
 ## Open questions
 
 1. Tool and CLI names: `brake_*`, or something else.
